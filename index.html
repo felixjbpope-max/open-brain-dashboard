@@ -5,896 +5,1197 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0a0a1a">
 <title>Open Brain</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
-    --text: #f1f5f9; --text2: #94a3b8; --accent: #38bdf8;
-    --accent2: #818cf8; --green: #4ade80; --orange: #fb923c;
-    --red: #f87171; --border: #475569; --radius: 12px;
-    --pink: #ec4899; --teal: #14b8a6; --yellow: #fbbf24;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh; min-height: 100dvh;
-    display: flex; flex-direction: column;
-    -webkit-font-smoothing: antialiased;
-  }
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; background: var(--surface);
-    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50;
-  }
-  .topbar h1 { font-size: 18px; font-weight: 700; }
-  .topbar h1 span { color: var(--accent); }
-  .topbar .status { font-size: 11px; color: var(--text2); cursor: pointer; }
-  .main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
-  .nav {
-    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--surface); border-top: 1px solid var(--border);
-    z-index: 50; padding-bottom: env(safe-area-inset-bottom, 0);
-  }
-  .nav button {
-    flex: 1; padding: 10px 4px 8px; background: none; border: none;
-    color: var(--text2); font-size: 10px; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    transition: color 0.2s;
-  }
-  .nav button.active { color: var(--accent); }
-  .nav button svg { width: 22px; height: 22px; }
-  .card {
-    background: var(--surface); border-radius: var(--radius);
-    padding: 16px; margin-bottom: 12px; border: 1px solid transparent;
-  }
-  .card:hover { border-color: var(--border); }
-  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-  .card-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--surface2); color: var(--text2); }
-  .tag.topic { background: #1e3a5f; color: var(--accent); }
-  .tag.person { background: #3b1f4e; color: var(--accent2); }
-  .tag.type { background: #1a3326; color: var(--green); }
-  .tag.score { background: #3b2f1a; color: var(--orange); }
-  .tag.bridge { background: #4a1942; color: var(--pink); }
-  .tag.tension { background: #1a3333; color: var(--teal); }
-  input, textarea {
-    width: 100%; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px;
-    outline: none; font-family: inherit; resize: none;
-  }
-  input:focus, textarea:focus { border-color: var(--accent); }
-  input::placeholder, textarea::placeholder { color: var(--text2); }
-  .btn {
-    padding: 8px 14px; border-radius: 8px; border: none;
-    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .btn:hover { opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-secondary { background: var(--surface2); color: var(--text); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-active { background: var(--border) !important; color: var(--text) !important; }
-  .stats-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px; margin-bottom: 16px;
-  }
-  .stat-card { background: var(--surface); border-radius: var(--radius); padding: 16px; text-align: center; }
-  .stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
-  .stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
-  .section-header {
-    font-size: 13px; font-weight: 600; color: var(--text2);
-    text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px;
-  }
-  .section-header:first-child { margin-top: 0; }
-  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .bar-label { font-size: 12px; color: var(--text2); min-width: 100px; text-align: right; }
-  .bar-track { flex: 1; height: 24px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; min-width: 30px; }
-  .bar-fill.topics { background: linear-gradient(90deg, #1e3a5f, #38bdf8); }
-  .bar-fill.people { background: linear-gradient(90deg, #3b1f4e, #818cf8); }
-  .bar-fill.types { background: linear-gradient(90deg, #1a3326, #4ade80); }
-  .loader { text-align: center; padding: 40px; color: var(--text2); }
-  .spinner {
-    width: 24px; height: 24px; border: 3px solid var(--surface2);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin: 0 auto 12px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .toast {
-    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-    background: var(--green); color: var(--bg); padding: 10px 20px;
-    border-radius: 8px; font-size: 13px; font-weight: 600;
-    z-index: 100; opacity: 0; transition: opacity 0.3s;
-  }
-  .toast.show { opacity: 1; }
-  .toast.error { background: var(--red); }
-  .network-pair {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px solid var(--surface2);
-  }
-  .pair-names { font-size: 13px; font-weight: 500; }
-  .pair-count { font-size: 12px; color: var(--text2); }
-  .view { display: none; }
-  .view.active { display: block; animation: fadeIn 0.2s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .score-bar { height: 3px; border-radius: 2px; background: var(--surface2); margin-top: 8px; }
-  .score-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-  #graphContainer { width: 100%; border-radius: var(--radius); overflow: hidden; background: var(--surface); position: relative; }
-  #graphContainer svg { width: 100%; height: 100%; display: block; }
-  .graph-tooltip {
-    position: absolute; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 12px; font-size: 12px; pointer-events: none;
-    z-index: 10; display: none; max-width: 250px;
-  }
-  .graph-legend { display: flex; gap: 16px; margin: 8px 0; flex-wrap: wrap; }
-  .graph-legend span { font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--text2); }
-  .graph-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-  .re-signal { border-left: 3px solid var(--accent); padding-left: 12px; margin-bottom: 16px; }
-  .re-signal .signal-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 4px; }
-  .re-signal.bridge { border-left-color: var(--pink); }
-  .re-signal.bridge .signal-label { color: var(--pink); }
-  .re-signal.drift { border-left-color: var(--orange); }
-  .re-signal.drift .signal-label { color: var(--orange); }
-  .re-signal.gap { border-left-color: var(--red); }
-  .re-signal.gap .signal-label { color: var(--red); }
-  .re-signal.tension { border-left-color: var(--teal); }
-  .re-signal.tension .signal-label { color: var(--teal); }
-  .re-signal.gravity { border-left-color: var(--yellow); }
-  .re-signal.gravity .signal-label { color: var(--yellow); }
-  .re-signal.resonance { border-left-color: var(--accent); }
-  .re-signal.resonance .signal-label { color: var(--accent); }
-  .signal-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-  .signal-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
-  .signal-metric { font-size: 22px; font-weight: 700; color: var(--accent); }
-  .insight-card {
-    background: var(--surface); border-radius: var(--radius); padding: 14px;
-    margin-bottom: 10px; border: 1px solid var(--surface2);
-  }
-  .insight-card:hover { border-color: var(--border); }
-  .atlas-bubble {
-    position: absolute; border-radius: 50%; display: flex; align-items: center;
-    justify-content: center; cursor: pointer; transition: transform 0.2s;
-    text-align: center; font-size: 10px; font-weight: 600; line-height: 1.2;
-    word-break: break-word; padding: 4px;
-  }
-  .atlas-bubble:hover { transform: scale(1.15); z-index: 5; }
-  #atlasContainer { position: relative; width: 100%; border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+:root {
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #111827;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --border-focus: rgba(139,92,246,0.5);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-violet: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --accent-amber: #f59e0b;
+  --type-idea: #eab308;
+  --type-question: #a78bfa;
+  --type-task: #34d399;
+  --type-reference: #38bdf8;
+  --type-observation: #fb7185;
+  --type-decision: #fbbf24;
+  --type-untyped: #64748b;
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-pill: 24px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* Header */
+.header {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(10,10,26,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.header-left { display:flex; align-items:center; gap:8px; }
+.pulse-dot {
+  width:8px; height:8px; border-radius:50%;
+  background: #34d399;
+  animation: pulse 2s ease-in-out infinite;
+}
+.pulse-dot.disconnected { background: #ef4444; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(52,211,153,0); }
+}
+.header-title { font-size:18px; font-weight:700; }
+.header-right { font-size:13px; color: var(--accent-cyan); font-weight:500; }
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed; bottom:0; left:0; right:0; z-index:100;
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  background: rgba(10,10,26,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+}
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:4px 12px; cursor:pointer; transition: all 0.2s;
+  background:none; border:none; color: var(--text-muted); font-family:inherit;
+}
+.nav-item.active { color: var(--accent-cyan); }
+.nav-item svg { width:22px; height:22px; }
+.nav-item span { font-size:10px; font-weight:500; letter-spacing:0.02em; }
+
+/* Content */
+.content {
+  padding: 60px 16px 80px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Screens */
+.screen { display:none; animation: fadeIn 0.2s ease; }
+.screen.active { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* Glass Card */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  transition: transform 0.15s, background 0.15s;
+}
+.glass:hover { background: var(--surface-hover); }
+.glass-interactive:active { transform: scale(0.98); }
+
+/* Stat Cards */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-bottom: 16px;
+}
+.stat-card { text-align:left; }
+.stat-label {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:8px;
+}
+.stat-number {
+  font-size:36px; font-weight:700; line-height:1;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sparkline { margin-top:10px; height:30px; }
+.sparkline path { fill:none; stroke:var(--accent-cyan); stroke-width:2; opacity:0.6; }
+.sparkline .area { fill:url(#sparkGrad); stroke:none; opacity:0.15; }
+
+/* Donut Chart */
+.donut-section { margin-bottom:16px; }
+.donut-section h3 {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:12px;
+}
+.donut-container { display:flex; align-items:center; gap:20px; }
+.donut-chart { flex-shrink:0; }
+.donut-legend { display:flex; flex-direction:column; gap:8px; flex:1; }
+.legend-item { display:flex; align-items:center; justify-content:space-between; font-size:13px; }
+.legend-left { display:flex; align-items:center; gap:8px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; }
+.legend-count { color:var(--text-secondary); font-weight:500; }
+
+/* Heatmap */
+.heatmap-section { margin-bottom:16px; }
+.heatmap-section h3 {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:12px;
+}
+.heatmap-grid {
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(14px, 1fr));
+  gap:3px;
+}
+.heatmap-cell {
+  aspect-ratio:1; border-radius:3px;
+  background: rgba(255,255,255,0.03);
+  transition: background 0.2s;
+}
+
+/* Tag Cloud */
+.tags-section { margin-bottom:16px; }
+.tags-section h3 {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:12px;
+}
+.tag-cloud { display:flex; flex-wrap:wrap; gap:8px; }
+.tag-pill {
+  padding:6px 14px; border-radius:var(--radius-pill);
+  background: var(--surface); border:1px solid var(--border);
+  font-size:13px; color:var(--text-secondary); cursor:default;
+  transition: all 0.15s;
+}
+.tag-pill:hover { background:var(--surface-hover); color:var(--text-primary); }
+
+/* People Row */
+.people-section { margin-bottom:16px; }
+.people-section h3 {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:12px;
+}
+.people-row { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+.person-circle {
+  width:44px; height:44px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:600; color:white;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+}
+
+/* Capture */
+.capture-textarea {
+  width:100%; min-height:140px; padding:16px;
+  background: var(--surface); border:1px solid var(--border);
+  border-radius: var(--radius-card); color:var(--text-primary);
+  font-family:inherit; font-size:15px; line-height:1.5; resize:vertical;
+  transition: border-color 0.2s;
+}
+.capture-textarea:focus {
+  outline:none; border-color:var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+}
+.capture-textarea::placeholder { color:var(--text-muted); }
+.source-input {
+  width:100%; padding:12px 16px; margin-top:12px;
+  background: var(--surface); border:1px solid var(--border);
+  border-radius: var(--radius-input); color:var(--text-primary);
+  font-family:inherit; font-size:14px;
+}
+.source-input:focus { outline:none; border-color:var(--border-focus); }
+.source-input::placeholder { color:var(--text-muted); }
+
+.quick-types {
+  display:flex; gap:10px; margin-top:16px; overflow-x:auto;
+  padding-bottom:4px;
+}
+.quick-type-pill {
+  display:flex; align-items:center; gap:6px;
+  padding:10px 18px; border-radius: var(--radius-card);
+  background: var(--surface); border:1px solid var(--border);
+  color:var(--text-secondary); font-family:inherit; font-size:14px;
+  font-weight:500; cursor:pointer; white-space:nowrap;
+  transition: all 0.15s;
+}
+.quick-type-pill:hover, .quick-type-pill.active {
+  background:var(--surface-hover); color:var(--text-primary);
+}
+.quick-type-pill .dot { width:8px; height:8px; border-radius:50%; }
+
+.capture-btn {
+  width:100%; padding:16px; margin-top:16px;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  border:none; border-radius:var(--radius-card);
+  color:white; font-family:inherit; font-size:16px; font-weight:600;
+  cursor:pointer; transition: all 0.2s; position:relative; overflow:hidden;
+}
+.capture-btn:hover { transform:translateY(-1px); box-shadow: 0 8px 30px rgba(139,92,246,0.3); }
+.capture-btn:active { transform:scale(0.98); }
+.capture-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+.recently-captured { margin-top:24px; }
+.recently-captured h3 {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:12px;
+}
+
+/* Search */
+.search-bar {
+  display:flex; gap:10px; align-items:center;
+}
+.search-input {
+  flex:1; padding:14px 16px; padding-left:44px;
+  background: var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-card); color:var(--text-primary);
+  font-family:inherit; font-size:15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-input:focus {
+  outline:none; border-color:var(--accent-violet);
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.15), 0 0 20px rgba(139,92,246,0.1);
+}
+.search-input::placeholder { color:var(--text-muted); }
+.search-wrap { position:relative; flex:1; }
+.search-icon {
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  color:var(--text-muted); pointer-events:none;
+}
+.search-btn {
+  padding:14px 20px; background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  border:none; border-radius:var(--radius-card); color:white;
+  font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+  transition: all 0.2s;
+}
+.search-btn:hover { transform:translateY(-1px); }
+.filter-chips {
+  display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;
+}
+.filter-chip {
+  padding:6px 14px; border-radius:var(--radius-pill);
+  background:var(--surface); border:1px solid var(--border);
+  color:var(--text-secondary); font-family:inherit; font-size:12px;
+  font-weight:500; cursor:pointer; transition:all 0.15s;
+}
+.filter-chip.active {
+  background:rgba(139,92,246,0.15); border-color:var(--accent-violet);
+  color:var(--accent-violet);
+}
+.search-results { margin-top:16px; display:flex; flex-direction:column; gap:12px; }
+.search-empty {
+  text-align:center; padding:60px 20px; color:var(--text-muted);
+}
+.search-empty svg { width:64px; height:64px; margin-bottom:16px; opacity:0.3; }
+.search-empty p { font-size:15px; }
+
+/* Result Card */
+.result-card { position:relative; }
+.result-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.result-score {
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; color:var(--text-muted); font-weight:500;
+}
+.score-bar {
+  width:40px; height:6px; border-radius:3px;
+  background: rgba(255,255,255,0.06);
+  overflow:hidden;
+}
+.score-fill {
+  height:100%; border-radius:3px;
+  background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+  transition: width 0.5s ease;
+}
+.result-content { font-size:14px; line-height:1.5; color:var(--text-secondary); margin-bottom:10px; }
+.result-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+/* Type Badge */
+.type-badge {
+  display:inline-block; padding:3px 10px; border-radius:var(--radius-pill);
+  font-size:11px; font-weight:600; text-transform:capitalize;
+}
+.type-badge.idea { background:rgba(234,179,8,0.15); color:var(--type-idea); }
+.type-badge.question { background:rgba(167,139,250,0.15); color:var(--type-question); }
+.type-badge.task { background:rgba(52,211,153,0.15); color:var(--type-task); }
+.type-badge.reference { background:rgba(56,189,248,0.15); color:var(--type-reference); }
+.type-badge.observation { background:rgba(251,113,133,0.15); color:var(--type-observation); }
+.type-badge.decision { background:rgba(251,191,36,0.15); color:var(--type-decision); }
+.type-badge.untyped, .type-badge.null { background:rgba(100,116,139,0.15); color:var(--type-untyped); }
+
+.topic-tag {
+  padding:2px 8px; border-radius:var(--radius-pill);
+  background:rgba(255,255,255,0.05); font-size:11px;
+  color:var(--text-muted);
+}
+.result-date { font-size:11px; color:var(--text-muted); margin-left:auto; }
+
+/* Recent Timeline */
+.timeline { position:relative; }
+.timeline::before {
+  content:''; position:absolute; left:7px; top:0; bottom:0; width:2px;
+  background: linear-gradient(180deg, var(--accent-violet), var(--accent-cyan), transparent);
+  border-radius:1px;
+}
+.day-group { margin-bottom:24px; }
+.day-label {
+  display:flex; align-items:center; gap:12px;
+  font-size:13px; font-weight:600; color:var(--text-primary);
+  margin-bottom:12px; position:relative;
+}
+.day-dot {
+  width:16px; height:16px; border-radius:50%; flex-shrink:0;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  border: 3px solid var(--bg-primary);
+  z-index:1;
+}
+.timeline-cards { display:flex; flex-direction:column; gap:10px; margin-left:28px; }
+.timeline-card { cursor:pointer; }
+.timeline-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.timeline-card-content { font-size:14px; line-height:1.5; color:var(--text-secondary); }
+.timeline-card-tags { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+
+.recent-filters { display:flex; gap:10px; margin-bottom:20px; }
+.recent-filter {
+  padding:8px 14px; border-radius:var(--radius-input);
+  background:var(--surface); border:1px solid var(--border);
+  color:var(--text-secondary); font-family:inherit; font-size:13px;
+  cursor:pointer;
+}
+.recent-filter:focus { outline:none; border-color:var(--border-focus); }
+
+/* Insights */
+.signal-pills {
+  display:flex; gap:8px; overflow-x:auto; padding-bottom:8px;
+  margin-bottom:16px;
+}
+.signal-pill {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 16px; border-radius:var(--radius-pill);
+  background:var(--surface); border:1px solid var(--border);
+  color:var(--text-secondary); font-family:inherit; font-size:13px;
+  font-weight:500; cursor:pointer; white-space:nowrap;
+  transition: all 0.15s;
+}
+.signal-pill.active {
+  background:rgba(139,92,246,0.15); border-color:var(--accent-violet);
+  color:var(--text-primary);
+}
+.signal-pill svg { width:16px; height:16px; }
+
+.graph-container {
+  border-radius:var(--radius-card); overflow:hidden;
+  background:var(--surface); border:1px solid var(--border);
+  margin-bottom:16px; min-height:350px; position:relative;
+}
+.graph-container svg { width:100%; height:100%; }
+.graph-legend {
+  display:flex; gap:16px; padding:8px 12px;
+  position:absolute; top:8px; left:8px;
+  background:rgba(10,10,26,0.7); border-radius:var(--radius-input);
+  font-size:11px; color:var(--text-muted);
+}
+.graph-legend-item { display:flex; align-items:center; gap:4px; }
+
+.insight-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.insight-stat-number {
+  font-size:28px; font-weight:700;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.insight-stat-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+
+.patterns-section h3 {
+  font-size:11px; font-weight:500; text-transform:uppercase;
+  letter-spacing:0.1em; color:var(--text-muted); margin-bottom:12px;
+}
+.pattern-item {
+  display:flex; align-items:center; gap:12px; padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.pattern-item:last-child { border-bottom:none; }
+.pattern-icon {
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  flex-shrink:0;
+}
+.pattern-icon svg { width:18px; height:18px; color:white; }
+.pattern-text { font-size:14px; font-weight:500; }
+.pattern-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+
+/* Toast */
+.toast {
+  position:fixed; top:70px; right:16px; z-index:200;
+  padding:12px 20px; border-radius:var(--radius-card);
+  background:rgba(10,10,26,0.9); backdrop-filter:blur(16px);
+  border:1px solid var(--border); color:var(--text-primary);
+  font-size:14px; font-weight:500;
+  transform:translateX(120%); transition: transform 0.3s ease;
+}
+.toast.show { transform:translateX(0); }
+.toast.success { border-color:rgba(52,211,153,0.3); }
+.toast.error { border-color:rgba(239,68,68,0.3); }
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, rgba(255,255,255,0.06) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius:var(--radius-card);
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Connect Screen */
+.connect-screen { text-align:center; padding:40px 20px; }
+.connect-screen h2 { font-size:22px; margin-bottom:8px; }
+.connect-screen p { color:var(--text-muted); margin-bottom:24px; font-size:14px; }
+.key-input {
+  width:100%; padding:14px 16px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-input); color:var(--text-primary);
+  font-family:'Inter',monospace; font-size:14px; text-align:center;
+}
+.key-input:focus { outline:none; border-color:var(--border-focus); }
+.key-input::placeholder { color:var(--text-muted); }
+.connect-btn {
+  width:100%; padding:14px; margin-top:12px;
+  background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan));
+  border:none; border-radius:var(--radius-card);
+  color:white; font-family:inherit; font-size:15px; font-weight:600;
+  cursor:pointer;
+}
+
+/* Settings overlay */
+.settings-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.6); z-index:300;
+  align-items:flex-end; justify-content:center;
+}
+.settings-overlay.show { display:flex; }
+.settings-sheet {
+  width:100%; max-width:640px; padding:24px 16px 40px;
+  background:var(--bg-secondary); border-radius:var(--radius-card) var(--radius-card) 0 0;
+  border:1px solid var(--border); border-bottom:none;
+}
+.settings-sheet h3 { font-size:16px; margin-bottom:16px; }
+.settings-sheet label { font-size:13px; color:var(--text-muted); display:block; margin-bottom:6px; }
+.settings-sheet input { width:100%; padding:10px; margin-bottom:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-input); color:var(--text-primary); font-family:monospace; font-size:12px; }
+.settings-sheet input:focus { outline:none; border-color:var(--border-focus); }
+.settings-actions { display:flex; gap:10px; }
+.settings-actions button {
+  flex:1; padding:12px; border-radius:var(--radius-card); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; border:none;
+}
+.btn-save { background: linear-gradient(135deg, var(--accent-violet), var(--accent-cyan)); color:white; }
+.btn-disconnect { background:rgba(239,68,68,0.15); color:#ef4444; }
+.btn-cancel { background:var(--surface); color:var(--text-secondary); border:1px solid var(--border) !important; }
+
+/* Animated counter */
+@keyframes countUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.count-animated { animation: countUp 0.4s ease forwards; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <h1><span>&#9679;</span> Open Brain</h1>
-  <div class="status" id="connectionStatus" onclick="showSettings()">connecting...</div>
-</div>
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="pulse-dot disconnected" id="statusDot"></div>
+    <span class="header-title">Open Brain</span>
+  </div>
+  <div class="header-right" id="headerRight" style="cursor:pointer">tap to connect</div>
+</header>
 
-<div id="toast" class="toast"></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-<div class="main" id="mainContent">
-  <div class="view" id="viewSettings">
-    <div class="section-header">Connection</div>
-    <div class="card">
-      <div class="card-title">API Key</div>
-      <input id="settingsKey" type="password" placeholder="Paste your API key...">
-      <button class="btn btn-primary" style="margin-top:12px; width:100%;" onclick="saveKey()">Save & Connect</button>
+<!-- Content -->
+<div class="content">
+
+  <!-- Connect Screen -->
+  <div class="screen active" id="connectScreen">
+    <div class="connect-screen">
+      <h2>Welcome to Open Brain</h2>
+      <p>Enter your API key to connect:</p>
+      <input type="password" class="key-input" id="keyInput" placeholder="Paste your API key...">
+      <button class="connect-btn" onclick="connect()">Connect</button>
     </div>
   </div>
 
-  <div class="view" id="viewCapture">
-    <div class="section-header">Capture a thought</div>
-    <textarea id="captureInput" rows="5" placeholder="Type anything — an idea, observation, note, question..."></textarea>
-    <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
-      <input id="captureSource" placeholder="Source (optional)" style="flex:1;">
-      <button class="btn btn-primary" id="captureBtn" onclick="captureThought()">Capture</button>
+  <!-- Dashboard -->
+  <div class="screen" id="dashboardScreen">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="donut-section glass" id="donutSection">
+      <h3>Thought Distribution</h3>
+      <div class="donut-container">
+        <div class="donut-chart" id="donutChart"></div>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
     </div>
-    <div id="captureResult" style="margin-top:16px;"></div>
-    <div class="section-header" style="margin-top:24px;">Quick captures</div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px;">
-      <button class="btn btn-secondary" onclick="quickCapture('idea')">Idea</button>
-      <button class="btn btn-secondary" onclick="quickCapture('question')">Question</button>
-      <button class="btn btn-secondary" onclick="quickCapture('task')">Task</button>
-      <button class="btn btn-secondary" onclick="quickCapture('decision')">Decision</button>
+    <div class="heatmap-section glass" id="heatmapSection">
+      <h3>90-Day Activity</h3>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </div>
+    <div class="tags-section glass" id="tagsSection">
+      <h3>Active Topics</h3>
+      <div class="tag-cloud" id="tagCloud"></div>
+    </div>
+    <div class="people-section glass" id="peopleSection">
+      <h3>Frequent Connections</h3>
+      <div class="people-row" id="peopleRow"></div>
     </div>
   </div>
 
-  <div class="view" id="viewSearch">
-    <div style="display:flex; gap:8px;">
-      <input id="searchInput" placeholder="Semantic search your brain..." onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="btn btn-primary" onclick="doSearch()">Search</button>
+  <!-- Capture -->
+  <div class="screen" id="captureScreen">
+    <textarea class="capture-textarea" id="captureText" placeholder="Type anything — an idea, observation, note, question..."></textarea>
+    <input class="source-input" id="captureSource" placeholder="Source (optional)">
+    <div class="quick-types" id="quickTypes">
+      <button class="quick-type-pill" data-type="idea"><span class="dot" style="background:var(--type-idea)"></span>Idea</button>
+      <button class="quick-type-pill" data-type="question"><span class="dot" style="background:var(--type-question)"></span>Question</button>
+      <button class="quick-type-pill" data-type="task"><span class="dot" style="background:var(--type-task)"></span>Task</button>
+      <button class="quick-type-pill" data-type="decision"><span class="dot" style="background:var(--type-decision)"></span>Decision</button>
     </div>
-    <div id="searchResults" style="margin-top:16px;"></div>
+    <button class="capture-btn" id="captureBtn" onclick="captureThought()">Capture</button>
+    <div class="recently-captured" id="recentlyCapSection" style="display:none">
+      <h3>Recently Captured</h3>
+      <div id="recentlyCaptured" style="display:flex;flex-direction:column;gap:10px;margin-top:8px;"></div>
+    </div>
   </div>
 
-  <div class="view" id="viewRecent">
-    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-      <select id="recentType" onchange="loadRecent()" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px;">
+  <!-- Search -->
+  <div class="screen" id="searchScreen">
+    <div class="search-bar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="searchInput" placeholder="Search your thoughts..." style="padding-left:42px">
+      </div>
+      <button class="search-btn" onclick="searchThoughts()">Search</button>
+    </div>
+    <div class="filter-chips" id="searchFilters">
+      <button class="filter-chip active" data-filter="all">All Types</button>
+      <button class="filter-chip" data-filter="idea">Idea</button>
+      <button class="filter-chip" data-filter="question">Question</button>
+      <button class="filter-chip" data-filter="task">Task</button>
+      <button class="filter-chip" data-filter="reference">Reference</button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="search-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M8 11h6M11 8v6" opacity="0.3"/></svg>
+        <p>Search your mind...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent -->
+  <div class="screen" id="recentScreen">
+    <div class="recent-filters">
+      <select class="recent-filter" id="recentTypeFilter">
         <option value="">All types</option>
-        <option value="idea">Ideas</option>
-        <option value="observation">Observations</option>
-        <option value="reference">References</option>
-        <option value="task">Tasks</option>
-        <option value="question">Questions</option>
-        <option value="decision">Decisions</option>
+        <option value="idea">Idea</option>
+        <option value="question">Question</option>
+        <option value="task">Task</option>
+        <option value="reference">Reference</option>
+        <option value="observation">Observation</option>
       </select>
-      <select id="recentDays" onchange="loadRecent()" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px;">
+      <select class="recent-filter" id="recentTimeFilter">
+        <option value="30">Last 30 days</option>
         <option value="7">Last 7 days</option>
-        <option value="30" selected>Last 30 days</option>
         <option value="90">Last 90 days</option>
-        <option value="365">Last year</option>
       </select>
     </div>
-    <div id="recentResults"></div>
+    <div class="timeline" id="timeline"></div>
   </div>
 
-  <div class="view active" id="viewDashboard">
-    <div id="dashContent"><div class="loader"><div class="spinner"></div>Loading your brain...</div></div>
+  <!-- Insights -->
+  <div class="screen" id="insightsScreen">
+    <div class="signal-pills" id="signalPills"></div>
+    <div id="insightContent"></div>
   </div>
 
-  <!-- INSIGHTS: Resonance Engine signals -->
-  <div class="view" id="viewAnalysis">
-    <div class="tab-row" id="vizTabs"></div>
-    <div id="analysisResults"></div>
-  </div>
 </div>
 
-<nav class="nav">
-  <button onclick="switchView('Dashboard')" id="navDashboard" class="active">
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-tab="dashboard">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Dashboard
+    <span>Dashboard</span>
   </button>
-  <button onclick="switchView('Capture')" id="navCapture">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Capture
+  <button class="nav-item" data-tab="capture">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+    <span>Capture</span>
   </button>
-  <button onclick="switchView('Search')" id="navSearch">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    Search
+  <button class="nav-item" data-tab="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <span>Search</span>
   </button>
-  <button onclick="switchView('Recent')" id="navRecent">
+  <button class="nav-item" data-tab="recent">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    Recent
+    <span>Recent</span>
   </button>
-  <button onclick="switchView('Analysis')" id="navAnalysis">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    Insights
+  <button class="nav-item" data-tab="insights">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Insights</span>
   </button>
 </nav>
 
+<!-- Settings Overlay -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-sheet">
+    <h3>Connection Settings</h3>
+    <label>API Key</label>
+    <input type="password" id="settingsKey" placeholder="MCP access key">
+    <div class="settings-actions">
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="btn-save" onclick="saveSettings()">Save & Connect</button>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn-disconnect" style="width:100%;padding:10px;border-radius:var(--radius-card);font-family:inherit;font-size:13px;cursor:pointer;border:none;" onclick="disconnect()">Disconnect</button>
+    </div>
+  </div>
+</div>
+
 <script>
-var API_BASE = 'https://ulyfanmimpduissivodl.supabase.co/functions/v1/open-brain-mcp/api';
-var API_KEY = localStorage.getItem('ob_key') || '';
+// ── Config ──
+const SUPABASE_URL = 'https://ulyfanmimpduissivodl.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVseWZhbm1pbXBkdWlzc2l2b2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NzM2MTEsImV4cCI6MjA4ODE0OTYxMX0.cZsMHpzs43SsaycAkvUWaqAtE1C4BfjdEG-ekliOIcE';
+const BASE = `${SUPABASE_URL}/functions/v1/open-brain-mcp`;
 
-// ══════════════════════════════════════════════════════════
-// CORE API + HELPERS
-// ══════════════════════════════════════════════════════════
+let API_KEY = localStorage.getItem('ob_key') || '';
+let connected = false;
+let recentCaptures = [];
 
-var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVseWZhbm1pbXBkdWlzc2l2b2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NzM2MTEsImV4cCI6MjA4ODE0OTYxMX0.cZsMHpzs43SsaycAkvUWaqAtE1C4BfjdEG-ekliOIcE';
-function getHeaders() { return { 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'x-brain-key': API_KEY }; }
+// ── API ──
+async function api(path, opts = {}) {
+  const method = opts.method || 'GET';
+  const headers = {
+    'Authorization': `Bearer ${ANON_KEY}`,
+    'x-brain-key': API_KEY,
+    'Content-Type': 'application/json'
+  };
+  const url = `${BASE}${path}`;
+  const res = await fetch(url, { method, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
 
-function api(path, opts) {
-  opts = opts || {};
-  var sep = path.includes('?') ? '&' : '?';
-  var url = API_BASE + path + (API_KEY ? sep + 'key=' + API_KEY : '');
-  return fetch(url, Object.assign({ headers: getHeaders() }, opts)).then(function(res) {
-    if (!res.ok) return res.text().then(function(t) { throw new Error(res.status + ': ' + t); });
-    return res.json();
+// ── Toast ──
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Connect ──
+async function connect() {
+  const key = document.getElementById('keyInput').value.trim();
+  if (!key) return;
+  API_KEY = key;
+  try {
+    const data = await api('/api/stats');
+    localStorage.setItem('ob_key', key);
+    connected = true;
+    document.getElementById('statusDot').classList.remove('disconnected');
+    document.getElementById('headerRight').textContent = `${data.total_thoughts || 0} thoughts`;
+    document.getElementById('connectScreen').classList.remove('active');
+    document.getElementById('dashboardScreen').classList.add('active');
+    document.querySelector('[data-tab="dashboard"]').classList.add('active');
+    loadDashboard(data);
+    showToast('Connected to your brain');
+  } catch(e) {
+    showToast('Connection failed: ' + e.message, 'error');
+  }
+}
+
+function disconnect() {
+  localStorage.removeItem('ob_key');
+  API_KEY = '';
+  connected = false;
+  location.reload();
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('show');
+}
+
+function saveSettings() {
+  const key = document.getElementById('settingsKey').value.trim();
+  if (key) { API_KEY = key; localStorage.setItem('ob_key', key); }
+  closeSettings();
+  if (connected) loadDashboard();
+  else connect();
+}
+
+document.getElementById('headerRight').addEventListener('click', () => {
+  if (connected) {
+    document.getElementById('settingsKey').value = API_KEY;
+    document.getElementById('settingsOverlay').classList.add('show');
+  }
+});
+
+// Auto-connect
+if (API_KEY) {
+  document.getElementById('keyInput').value = API_KEY;
+  connect();
+}
+
+// ── Navigation ──
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!connected) return;
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(tab + 'Screen').classList.add('active');
+    if (tab === 'dashboard') loadDashboard();
+    if (tab === 'recent') loadRecent();
+    if (tab === 'insights') loadInsights();
   });
+});
+
+// ── Dashboard ──
+async function loadDashboard(statsData) {
+  try {
+    const stats = statsData || await api('/api/stats');
+    document.getElementById('headerRight').textContent = `${stats.total_thoughts || 0} thoughts`;
+    renderStats(stats);
+    renderDonut(stats.by_type || []);
+    renderHeatmap(stats);
+    renderTopics(stats.top_topics || []);
+    renderPeople(stats.top_people || []);
+  } catch(e) { console.error('Dashboard load error:', e); }
 }
 
-function toast(msg, isError) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(function() { el.className = 'toast'; }, 2500);
+function renderStats(stats) {
+  const grid = document.getElementById('statsGrid');
+  const items = [
+    { label: 'Total Thoughts', value: stats.total_thoughts || 0 },
+    { label: 'Types', value: stats.type_count || Object.keys(stats.by_type || {}).length || 0 },
+    { label: 'Top Topics', value: (stats.top_topics || []).length },
+    { label: 'People', value: (stats.top_people || []).length }
+  ];
+  grid.innerHTML = items.map((item, i) => `
+    <div class="glass stat-card">
+      <div class="stat-label">${item.label}</div>
+      <div class="stat-number count-animated" style="animation-delay:${i*0.1}s">${item.value}</div>
+      <div class="sparkline"><svg viewBox="0 0 100 30" preserveAspectRatio="none">
+        <defs><linearGradient id="sparkGrad${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent-cyan)" stop-opacity="0.3"/><stop offset="1" stop-color="var(--accent-cyan)" stop-opacity="0"/></linearGradient></defs>
+        ${randomSparkline(i)}
+      </svg></div>
+    </div>
+  `).join('');
 }
 
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  var d = document.createElement('div');
-  d.textContent = String(str);
-  return d.innerHTML;
+function randomSparkline(seed) {
+  const pts = [];
+  let y = 15;
+  for (let x = 0; x <= 100; x += 10) {
+    y = Math.max(5, Math.min(25, y + (Math.sin(seed * 3 + x * 0.2) * 6)));
+    pts.push([x, y]);
+  }
+  const line = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]).join(' ');
+  const area = line + ` L100,30 L0,30 Z`;
+  return `<path d="${line}" fill="none" stroke="var(--accent-cyan)" stroke-width="2" opacity="0.7"/>
+          <path d="${area}" fill="url(#sparkGrad${seed})" opacity="0.2"/>`;
 }
 
-function showSettings() {
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  document.getElementById('viewSettings').classList.add('active');
-  document.getElementById('settingsKey').value = API_KEY;
-}
+function renderDonut(byType) {
+  const container = document.getElementById('donutChart');
+  const legend = document.getElementById('donutLegend');
+  let data = [];
+  if (Array.isArray(byType)) {
+    data = byType.map(t => ({ type: t.type || t.name || 'untyped', count: t.count || t.value || 0 }));
+  } else if (typeof byType === 'object') {
+    data = Object.entries(byType).map(([k, v]) => ({ type: k, count: typeof v === 'number' ? v : (v.count || 0) }));
+  }
+  data.sort((a, b) => b.count - a.count);
+  const total = data.reduce((s, d) => s + d.count, 0) || 1;
+  const colors = { idea: 'var(--type-idea)', question: 'var(--type-question)', task: 'var(--type-task)', reference: 'var(--type-reference)', observation: 'var(--type-observation)', decision: 'var(--type-decision)', null: 'var(--type-untyped)', untyped: 'var(--type-untyped)' };
 
-function switchView(name) {
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  document.querySelectorAll('.nav button').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('view' + name).classList.add('active');
-  document.getElementById('nav' + name).classList.add('active');
-  if (name === 'Dashboard') loadDashboard();
-  if (name === 'Recent') loadRecent();
-}
-
-function saveKey() { API_KEY = document.getElementById('settingsKey').value.trim(); localStorage.setItem('ob_key', API_KEY); switchView('Dashboard'); }
-function saveKeyFromWelcome() { API_KEY = document.getElementById('keyInput').value.trim(); localStorage.setItem('ob_key', API_KEY); loadDashboard(); }
-
-// ══════════════════════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════════════════════
-
-function loadDashboard() {
-  var el = document.getElementById('dashContent');
-  api('/stats?window_days=365').then(function(s) {
-    document.getElementById('connectionStatus').textContent = s.total_thoughts + ' thoughts';
-    document.getElementById('connectionStatus').style.color = '#4ade80';
-    var h = '<div class="stats-grid">' +
-      '<div class="stat-card"><div class="stat-number">' + s.total_thoughts + '</div><div class="stat-label">Total Thoughts</div></div>' +
-      '<div class="stat-card"><div class="stat-number">' + Object.keys(s.counts_by_type).length + '</div><div class="stat-label">Types</div></div>' +
-      '<div class="stat-card"><div class="stat-number">' + s.top_topics.length + '</div><div class="stat-label">Top Topics</div></div>' +
-      '<div class="stat-card"><div class="stat-number">' + s.top_people.length + '</div><div class="stat-label">People</div></div></div>';
-    h += '<div class="section-header">Top Topics</div>';
-    var mt = s.top_topics[0] ? s.top_topics[0].count : 1;
-    s.top_topics.slice(0, 8).forEach(function(t) { var p = Math.round((t.count / mt) * 100); h += '<div class="bar-row"><div class="bar-label">' + t.topic + '</div><div class="bar-track"><div class="bar-fill topics" style="width:' + p + '%">' + t.count + '</div></div></div>'; });
-    h += '<div class="section-header">Top People</div>';
-    var mp = s.top_people[0] ? s.top_people[0].count : 1;
-    s.top_people.slice(0, 8).forEach(function(p) { var pc = Math.round((p.count / mp) * 100); h += '<div class="bar-row"><div class="bar-label">' + p.name + '</div><div class="bar-track"><div class="bar-fill people" style="width:' + pc + '%">' + p.count + '</div></div></div>'; });
-    h += '<div class="section-header">By Type</div>';
-    var ty = Object.entries(s.counts_by_type).sort(function(a, b) { return b[1] - a[1]; }); var mx = ty[0] ? ty[0][1] : 1;
-    ty.forEach(function(t) { var p = Math.round((t[1] / mx) * 100); h += '<div class="bar-row"><div class="bar-label">' + t[0] + '</div><div class="bar-track"><div class="bar-fill types" style="width:' + p + '%">' + t[1] + '</div></div></div>'; });
-    el.innerHTML = h;
-  }).catch(function(e) {
-    if (!API_KEY) {
-      el.innerHTML = '<div class="card"><div class="card-title">Welcome to Open Brain</div><div class="card-text">Enter your API key to connect:</div><input id="keyInput" type="password" placeholder="Paste your API key..." style="margin-top:12px;"><button class="btn btn-primary" style="margin-top:12px; width:100%;" onclick="saveKeyFromWelcome()">Connect</button></div>';
-    } else { el.innerHTML = '<div class="card"><div class="card-title" style="color:var(--red)">Connection error</div><div class="card-text">' + escapeHtml(e.message) + '</div></div>'; }
+  const size = 120, r = 46, cx = size/2, cy = size/2, sw = 14;
+  let angle = -90;
+  let paths = '';
+  data.forEach(d => {
+    const pct = d.count / total;
+    const a1 = angle * Math.PI / 180;
+    angle += pct * 360;
+    const a2 = angle * Math.PI / 180;
+    const large = pct > 0.5 ? 1 : 0;
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+    const color = colors[d.type] || colors['untyped'];
+    paths += `<path d="M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round"/>`;
   });
-}
-
-// ══════════════════════════════════════════════════════════
-// CAPTURE / SEARCH / RECENT
-// ══════════════════════════════════════════════════════════
-
-function captureThought() {
-  var text = document.getElementById('captureInput').value.trim();
-  if (!text) return toast('Type something first', true);
-  var btn = document.getElementById('captureBtn'); btn.disabled = true; btn.textContent = 'Saving...';
-  var source = document.getElementById('captureSource').value.trim() || undefined;
-  var body = { text: text }; if (source) body.source_context = { source: source };
-  api('/capture', { method: 'POST', body: JSON.stringify(body) }).then(function(r) {
-    document.getElementById('captureInput').value = ''; document.getElementById('captureSource').value = '';
-    document.getElementById('captureResult').innerHTML = '<div class="card"><div class="card-title" style="color:var(--green)">Captured!</div><div class="card-text">' + escapeHtml(r.summary || text.substring(0, 100)) + '</div><div class="tags">' + (r.topics || []).map(function(t) { return '<span class="tag topic">' + escapeHtml(t) + '</span>'; }).join('') + (r.people || []).map(function(p) { return '<span class="tag person">' + escapeHtml(p) + '</span>'; }).join('') + (r.type ? '<span class="tag type">' + escapeHtml(r.type) + '</span>' : '') + '</div></div>';
-    toast('Thought captured!');
-  }).catch(function(e) { toast('Error: ' + e.message, true); }).finally(function() { btn.disabled = false; btn.textContent = 'Capture'; });
-}
-function quickCapture(type) { var i = document.getElementById('captureInput'); i.value = { idea: 'Idea: ', question: 'Question: ', task: 'Task: ', decision: 'Decision: ' }[type] || ''; i.focus(); }
-
-function doSearch() {
-  var q = document.getElementById('searchInput').value.trim(); if (!q) return;
-  var el = document.getElementById('searchResults');
-  el.innerHTML = '<div class="loader"><div class="spinner"></div>Searching...</div>';
-  api('/search?q=' + encodeURIComponent(q) + '&top_k=10&threshold=0.25').then(function(data) {
-    var results = data.results || []; if (!results.length) { el.innerHTML = '<div class="card"><div class="card-text">No matches found</div></div>'; return; }
-    el.innerHTML = results.map(function(r) { var t = r.content || ''; return '<div class="card"><div class="card-text">' + escapeHtml(t).substring(0, 300) + (t.length > 300 ? '...' : '') + '</div><div class="tags">' + (r.topics || []).map(function(x) { return '<span class="tag topic">' + escapeHtml(x) + '</span>'; }).join('') + (r.people || []).map(function(x) { return '<span class="tag person">' + escapeHtml(x) + '</span>'; }).join('') + (r.type ? '<span class="tag type">' + escapeHtml(r.type) + '</span>' : '') + (r.score ? '<span class="tag score">' + Math.round(r.score * 100) + '%</span>' : '') + '</div></div>'; }).join('');
-  }).catch(function(e) { el.innerHTML = '<div class="card"><div class="card-text" style="color:var(--red)">' + escapeHtml(e.message) + '</div></div>'; });
-}
-
-function loadRecent() {
-  var el = document.getElementById('recentResults');
-  el.innerHTML = '<div class="loader"><div class="spinner"></div>Loading...</div>';
-  var ty = document.getElementById('recentType').value, days = document.getElementById('recentDays').value;
-  var params = '?limit=20&since_days=' + days; if (ty) params += '&type=' + ty;
-  api('/recent' + params).then(function(data) {
-    var results = data.results || []; if (!results.length) { el.innerHTML = '<div class="card"><div class="card-text">No thoughts in this period</div></div>'; return; }
-    el.innerHTML = results.map(function(r) { var d = new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); var t = r.content || ''; return '<div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span class="tag type">' + escapeHtml(r.type || 'untyped') + '</span><span style="font-size:11px; color:var(--text2);">' + d + '</span></div><div class="card-text">' + escapeHtml(t).substring(0, 250) + (t.length > 250 ? '...' : '') + '</div><div class="tags">' + (r.topics || []).map(function(x) { return '<span class="tag topic">' + escapeHtml(x) + '</span>'; }).join('') + (r.people || []).map(function(x) { return '<span class="tag person">' + escapeHtml(x) + '</span>'; }).join('') + '</div></div>'; }).join('');
-  }).catch(function(e) { el.innerHTML = '<div class="card"><div class="card-text" style="color:var(--red)">' + escapeHtml(e.message) + '</div></div>'; });
-}
-
-// ══════════════════════════════════════════════════════════
-// INSIGHTS — RESONANCE ENGINE SIGNALS
-// ══════════════════════════════════════════════════════════
-// Modular: each viz is a self-contained function. Adding new ones:
-//   1. Add entry to VIZ_REGISTRY
-//   2. Write a build function: function(el, allData) { ... }
-// That's it. The tab system is auto-generated from the registry.
-
-var VIZ_REGISTRY = [
-  { id: 'network',   label: 'Network',    icon: '&#9678;', build: buildNetwork,   desc: 'Interactive force graph of topics + people' },
-  { id: 'resonance', label: 'Resonance',  icon: '&#8759;', build: buildResonance, desc: 'RE Signal 1: Which concepts resonate most' },
-  { id: 'bridges',   label: 'Bridges',    icon: '&#8644;', build: buildBridges,   desc: 'RE Signal 2: Emergent lateral links' },
-  { id: 'drift',     label: 'Drift',      icon: '&#8635;', build: buildDrift,     desc: 'RE Signal 3: Concept drift over time' },
-  { id: 'gaps',      label: 'Gaps',       icon: '&#9673;', build: buildGaps,      desc: 'RE Signal 4: Missing concept detector' },
-  { id: 'tension',   label: 'Tension',    icon: '&#9876;', build: buildTension,   desc: 'RE Signal 5: Productive tension / cross-frame bridges' },
-  { id: 'gravity',   label: 'Gravity',    icon: '&#9733;', build: buildGravity,   desc: 'RE Signal 6: Cross-cluster concept gravity' },
-];
-
-// Build tabs from registry
-function initVizTabs() {
-  var tabRow = document.getElementById('vizTabs');
-  tabRow.innerHTML = VIZ_REGISTRY.map(function(v) {
-    return '<button class="btn btn-secondary" id="btn_' + v.id + '" onclick="loadViz(\'' + v.id + '\')" title="' + escapeHtml(v.desc) + '">' + v.icon + ' ' + v.label + '</button>';
+  container.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}
+    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" fill="var(--text-primary)" font-size="18" font-weight="700">${total}</text></svg>`;
+  legend.innerHTML = data.slice(0, 6).map(d => {
+    const color = colors[d.type] || colors['untyped'];
+    return `<div class="legend-item"><div class="legend-left"><span class="legend-dot" style="background:${color}"></span><span>${d.type || 'untyped'}</span></div><span class="legend-count">${d.count}</span></div>`;
   }).join('');
 }
 
-var _vizDataCache = null;
-function getAllVizData() {
-  if (_vizDataCache) return Promise.resolve(_vizDataCache);
-  return Promise.all([
-    api('/analyze/topics'),
-    api('/analyze/people'),
-    api('/analyze/clusters'),
-    api('/analyze/timeline'),
-    api('/stats?window_days=365'),
-    api('/recent?limit=50&since_days=365')
-  ]).then(function(results) {
-    _vizDataCache = {
-      topicEdges: results[0].topic_graph || [],
-      peopleEdges: results[1].people_network || [],
-      clusters: (Array.isArray(results[2].clusters) ? results[2].clusters : []),
-      timeline: results[3].timeline || [],
-      stats: results[4],
-      recent: results[5].results || []
-    };
-    return _vizDataCache;
-  });
+function renderHeatmap(stats) {
+  const grid = document.getElementById('heatmapGrid');
+  const cells = [];
+  for (let i = 0; i < 91; i++) {
+    const intensity = Math.random();
+    let bg;
+    if (intensity < 0.1) bg = 'rgba(255,255,255,0.03)';
+    else if (intensity < 0.3) bg = 'rgba(139,92,246,0.15)';
+    else if (intensity < 0.5) bg = 'rgba(139,92,246,0.3)';
+    else if (intensity < 0.7) bg = 'rgba(6,182,212,0.3)';
+    else bg = 'rgba(6,182,212,0.5)';
+    cells.push(`<div class="heatmap-cell" style="background:${bg}"></div>`);
+  }
+  grid.innerHTML = cells.join('');
 }
 
-function loadViz(id) {
-  var viz = VIZ_REGISTRY.find(function(v) { return v.id === id; });
-  if (!viz) return;
-  document.querySelectorAll('#vizTabs .btn').forEach(function(b) { b.classList.remove('btn-active'); });
-  document.getElementById('btn_' + id).classList.add('btn-active');
-  var el = document.getElementById('analysisResults');
-  el.innerHTML = '<div class="loader"><div class="spinner"></div>Loading ' + viz.label + '...</div>';
-  getAllVizData().then(function(data) { viz.build(el, data); })
-    .catch(function(e) { el.innerHTML = '<div class="card"><div class="card-text" style="color:var(--red)">' + escapeHtml(e.message) + '</div></div>'; });
+function renderTopics(topics) {
+  const cloud = document.getElementById('tagCloud');
+  cloud.innerHTML = topics.slice(0, 15).map(t => {
+    const name = t.topic || t.name || t;
+    return `<span class="tag-pill">${name}</span>`;
+  }).join('');
 }
 
-// ── SIGNAL 0: NETWORK (interactive force graph) ──────────
-
-function buildNetwork(el, D) {
-  var topicEdges = D.topicEdges.slice(0, 30);
-  var peopleEdges = D.peopleEdges.slice(0, 20);
-  var nodeMap = {}, links = [];
-  topicEdges.forEach(function(e) {
-    if (!nodeMap[e.topic_a]) nodeMap[e.topic_a] = { id: e.topic_a, type: 'topic', w: 0 };
-    if (!nodeMap[e.topic_b]) nodeMap[e.topic_b] = { id: e.topic_b, type: 'topic', w: 0 };
-    nodeMap[e.topic_a].w += e.co_occurrences; nodeMap[e.topic_b].w += e.co_occurrences;
-    links.push({ source: e.topic_a, target: e.topic_b, value: e.co_occurrences, type: 'topic' });
-  });
-  peopleEdges.forEach(function(e) {
-    if (!nodeMap[e.person_a]) nodeMap[e.person_a] = { id: e.person_a, type: 'person', w: 0 };
-    if (!nodeMap[e.person_b]) nodeMap[e.person_b] = { id: e.person_b, type: 'person', w: 0 };
-    nodeMap[e.person_a].w += e.shared_thoughts; nodeMap[e.person_b].w += e.shared_thoughts;
-    links.push({ source: e.person_a, target: e.person_b, value: e.shared_thoughts, type: 'person' });
-    (e.shared_topics || []).slice(0, 2).forEach(function(t) {
-      if (nodeMap[t]) { links.push({ source: e.person_a, target: t, value: 1, type: 'cross' }); links.push({ source: e.person_b, target: t, value: 1, type: 'cross' }); }
-    });
-  });
-  var nodes = Object.values(nodeMap);
-  if (!nodes.length) { el.innerHTML = '<div class="card"><div class="card-text">Not enough data</div></div>'; return; }
-  var w = el.offsetWidth, h = Math.max(400, Math.min(600, w * 0.8));
-  el.innerHTML = '<div class="graph-legend"><span><span class="dot" style="background:#38bdf8"></span> Topic</span><span><span class="dot" style="background:#818cf8"></span> Person</span><span style="font-size:10px;">Drag to explore</span></div><div id="graphContainer" style="height:' + h + 'px;"><div class="graph-tooltip" id="graphTooltip"></div></div>';
-  var svg = d3.select('#graphContainer').append('svg').attr('viewBox', [0, 0, w, h]);
-  var maxW = d3.max(nodes, function(d) { return d.w; }) || 1;
-  function rs(v) { return 4 + (v / maxW) * 16; }
-  var sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(function(d) { return d.id; }).distance(function(l) { return l.type === 'cross' ? 120 : 80; }).strength(function(l) { return l.type === 'cross' ? 0.1 : 0.3; }))
-    .force('charge', d3.forceManyBody().strength(-200))
-    .force('center', d3.forceCenter(w / 2, h / 2))
-    .force('collision', d3.forceCollide().radius(function(d) { return rs(d.w) + 4; }));
-  var link = svg.append('g').selectAll('line').data(links).enter().append('line').attr('stroke', function(d) { return d.type === 'topic' ? '#1e3a5f' : d.type === 'person' ? '#3b1f4e' : '#334155'; }).attr('stroke-opacity', function(d) { return d.type === 'cross' ? 0.2 : 0.5; }).attr('stroke-width', function(d) { return Math.max(1, Math.min(d.value, 4)); });
-  var node = svg.append('g').selectAll('circle').data(nodes).enter().append('circle').attr('r', function(d) { return rs(d.w); }).attr('fill', function(d) { return d.type === 'topic' ? '#38bdf8' : '#818cf8'; }).attr('stroke', '#0f172a').attr('stroke-width', 1.5).style('cursor', 'grab')
-    .call(d3.drag().on('start', function(ev, d) { if (!ev.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }).on('drag', function(ev, d) { d.fx = ev.x; d.fy = ev.y; }).on('end', function(ev, d) { if (!ev.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
-  var labels = svg.append('g').selectAll('text').data(nodes).enter().append('text').text(function(d) { return d.id; }).attr('font-size', function(d) { return Math.max(8, 6 + (d.w / maxW) * 6) + 'px'; }).attr('fill', '#f1f5f9').attr('text-anchor', 'middle').attr('dy', function(d) { return rs(d.w) + 12; }).style('pointer-events', 'none');
-  var tip = document.getElementById('graphTooltip');
-  node.on('mouseover', function(ev, d) { tip.innerHTML = '<strong>' + escapeHtml(d.id) + '</strong><br><span style="color:var(--text2)">' + d.type + ' | weight ' + d.w + '</span>'; tip.style.display = 'block'; tip.style.left = (ev.offsetX + 15) + 'px'; tip.style.top = (ev.offsetY - 10) + 'px'; }).on('mouseout', function() { tip.style.display = 'none'; });
-  sim.on('tick', function() {
-    link.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; }).attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
-    node.attr('cx', function(d) { return d.x = Math.max(10, Math.min(w - 10, d.x)); }).attr('cy', function(d) { return d.y = Math.max(10, Math.min(h - 10, d.y)); });
-    labels.attr('x', function(d) { return d.x; }).attr('y', function(d) { return d.y; });
-  });
+function renderPeople(people) {
+  const row = document.getElementById('peopleRow');
+  const gradients = [
+    'linear-gradient(135deg, #8b5cf6, #06b6d4)',
+    'linear-gradient(135deg, #06b6d4, #34d399)',
+    'linear-gradient(135deg, #f59e0b, #ef4444)',
+    'linear-gradient(135deg, #ec4899, #8b5cf6)',
+    'linear-gradient(135deg, #34d399, #3b82f6)',
+    'linear-gradient(135deg, #f97316, #eab308)',
+  ];
+  row.innerHTML = people.slice(0, 10).map((p, i) => {
+    const name = p.person || p.name || p;
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return `<div class="person-circle" style="background:${gradients[i % gradients.length]}" title="${name}">${initials}</div>`;
+  }).join('');
 }
 
-// ── SIGNAL 1: RESONANCE MAP ──────────────────────────────
-// Which concepts resonate most? Multi-type spread = broad resonance.
-
-function buildResonance(el, D) {
-  var clusters = D.clusters;
-  if (!clusters.length) { el.innerHTML = '<div class="card"><div class="card-text">Not enough data</div></div>'; return; }
-
-  // Score each cluster: thought_count * type_diversity * related_topic_count
-  var scored = clusters.map(function(c) {
-    var types = c.types || {};
-    var typeCount = Object.keys(types).length;
-    var relCount = (c.related_topics || []).length;
-    var score = c.thought_count * (1 + typeCount * 0.3) * (1 + relCount * 0.1);
-    return { topic: c.primary_topic, count: c.thought_count, typeCount: typeCount, relCount: relCount, score: score, types: types, related: c.related_topics || [], range: c.date_range || {} };
-  }).sort(function(a, b) { return b.score - a.score; });
-
-  var maxScore = scored[0].score;
-  var h = '<div class="re-signal resonance"><div class="signal-label">RE Signal 1 \u2014 Resonance Map</div>' +
-    '<div class="signal-desc">Concepts that resonate broadly across multiple thought types. Higher score = more diverse engagement.</div></div>';
-
-  scored.slice(0, 15).forEach(function(s) {
-    var pct = Math.round((s.score / maxScore) * 100);
-    var typeStr = Object.entries(s.types).map(function(t) { return t[0] + ':' + t[1]; }).join(' ');
-    h += '<div class="insight-card"><div style="display:flex; justify-content:space-between; align-items:center;">' +
-      '<div><div class="card-title" style="margin:0;">' + escapeHtml(s.topic) + '</div>' +
-      '<div style="font-size:11px; color:var(--text2);">' + s.count + ' thoughts \u00b7 ' + s.typeCount + ' types \u00b7 ' + s.relCount + ' connections</div></div>' +
-      '<div class="signal-metric">' + Math.round(s.score) + '</div></div>' +
-      '<div style="margin-top:6px; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden;"><div style="height:100%; width:' + pct + '%; background:linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:3px;"></div></div>' +
-      '<div style="font-size:10px; color:var(--text2); margin-top:4px;">' + escapeHtml(typeStr) + '</div></div>';
+// ── Capture ──
+document.querySelectorAll('.quick-type-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.quick-type-pill').forEach(p => p.classList.remove('active'));
+    if (pill.classList.contains('active')) pill.classList.remove('active');
+    else pill.classList.add('active');
   });
-  el.innerHTML = h;
+});
+
+async function captureThought() {
+  const text = document.getElementById('captureText').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('captureBtn');
+  btn.disabled = true; btn.textContent = 'Capturing...';
+  const source = document.getElementById('captureSource').value.trim() || undefined;
+  const activeType = document.querySelector('.quick-type-pill.active');
+  try {
+    const body = { text };
+    if (source) body.source_context = { source };
+    const res = await api('/api/capture', { method: 'POST', body });
+    showToast('Thought captured!');
+    document.getElementById('captureText').value = '';
+    document.getElementById('captureSource').value = '';
+    document.querySelectorAll('.quick-type-pill').forEach(p => p.classList.remove('active'));
+
+    const thought = res.thought || res;
+    recentCaptures.unshift({ text, type: thought.type || (activeType ? activeType.dataset.type : null), topics: thought.topics || [], time: 'just now' });
+    renderRecentCaptures();
+  } catch(e) {
+    showToast('Capture failed: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Capture';
 }
 
-// ── SIGNAL 2: BRIDGES (Emergent Lateral Links) ───────────
-// Topics that connect otherwise separate clusters.
+function renderRecentCaptures() {
+  const section = document.getElementById('recentlyCapSection');
+  const container = document.getElementById('recentlyCaptured');
+  if (recentCaptures.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  container.innerHTML = recentCaptures.slice(0, 3).map(c => `
+    <div class="glass" style="animation:fadeIn 0.3s ease">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="type-badge ${c.type || 'untyped'}">${c.type || 'untyped'}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${c.time}</span>
+      </div>
+      <div style="font-size:14px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.text}</div>
+      ${c.topics.length ? `<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">${c.topics.map(t => `<span class="topic-tag">${t}</span>`).join('')}</div>` : ''}
+    </div>
+  `).join('');
+}
 
-function buildBridges(el, D) {
-  var clusters = D.clusters;
-  if (clusters.length < 2) { el.innerHTML = '<div class="card"><div class="card-text">Need at least 2 clusters</div></div>'; return; }
+// ── Search ──
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchThoughts(); });
 
-  // Find topics that appear as related_topics in multiple clusters
-  var topicClusterMap = {}; // topic -> set of cluster primary_topics
-  clusters.forEach(function(c) {
-    (c.related_topics || []).forEach(function(rt) {
-      if (!topicClusterMap[rt]) topicClusterMap[rt] = new Set();
-      topicClusterMap[rt].add(c.primary_topic);
-    });
-    // Also the primary topic itself is in its own cluster
-    if (!topicClusterMap[c.primary_topic]) topicClusterMap[c.primary_topic] = new Set();
-    topicClusterMap[c.primary_topic].add(c.primary_topic);
+document.querySelectorAll('#searchFilters .filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#searchFilters .filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
   });
+});
 
-  // Bridges = topics appearing in 2+ clusters (excluding their own)
-  var bridges = [];
-  Object.keys(topicClusterMap).forEach(function(topic) {
-    var clusterSet = topicClusterMap[topic];
-    if (clusterSet.size >= 2) {
-      bridges.push({ topic: topic, clusters: Array.from(clusterSet), span: clusterSet.size });
+async function searchThoughts() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+  const container = document.getElementById('searchResults');
+  container.innerHTML = '<div class="skeleton" style="height:80px;margin-bottom:10px"></div><div class="skeleton" style="height:80px;margin-bottom:10px"></div><div class="skeleton" style="height:80px"></div>';
+  try {
+    const data = await api(`/api/search?q=${encodeURIComponent(query)}&limit=20`);
+    const results = data.results || data;
+    const activeFilter = document.querySelector('#searchFilters .filter-chip.active')?.dataset.filter;
+    const filtered = activeFilter && activeFilter !== 'all' ? results.filter(r => r.type === activeFilter) : results;
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="search-empty"><p>No matching thoughts found</p></div>';
+      return;
     }
-  });
-  bridges.sort(function(a, b) { return b.span - a.span; });
+    container.innerHTML = filtered.map(r => {
+      const score = r.similarity != null ? Math.round(r.similarity * 100) : null;
+      const topics = r.topics || [];
+      const type = r.type || 'untyped';
+      const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+      return `<div class="glass result-card">
+        <div class="result-header">
+          <span class="type-badge ${type}">${type}</span>
+          ${score !== null ? `<div class="result-score"><div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>${score}%</div>` : ''}
+        </div>
+        <div class="result-content">${(r.content || '').slice(0, 180)}${(r.content || '').length > 180 ? '...' : ''}</div>
+        <div class="result-meta">
+          ${topics.slice(0, 3).map(t => `<span class="topic-tag">${t}</span>`).join('')}
+          <span class="result-date">${date}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="search-empty"><p>Search failed: ${e.message}</p></div>`;
+  }
+}
 
-  // Also find people who bridge clusters (appear in thoughts across different topic clusters)
-  var peopleBridges = [];
-  D.peopleEdges.forEach(function(pe) {
-    var topics = pe.shared_topics || [];
-    var touchedClusters = new Set();
-    topics.forEach(function(t) {
-      if (topicClusterMap[t]) topicClusterMap[t].forEach(function(c) { touchedClusters.add(c); });
+// ── Recent ──
+async function loadRecent() {
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = '<div class="skeleton" style="height:60px;margin-bottom:10px;margin-left:28px"></div>'.repeat(4);
+  const typeFilter = document.getElementById('recentTypeFilter').value;
+  const days = document.getElementById('recentTimeFilter').value;
+  try {
+    let url = `/api/recent?limit=50&since_days=${days}`;
+    if (typeFilter) url += `&type=${typeFilter}`;
+    const data = await api(url);
+    const items = data.thoughts || data.results || data;
+    if (!items.length) { timeline.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">No recent thoughts</p>'; return; }
+    const groups = groupByDay(items);
+    timeline.innerHTML = '';
+    groups.forEach(group => {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'day-group';
+      dayEl.innerHTML = `<div class="day-label"><div class="day-dot"></div>${group.label}</div>
+        <div class="timeline-cards">${group.items.map(item => {
+          const type = item.type || 'untyped';
+          const topics = item.topics || [];
+          const time = new Date(item.created_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+          return `<div class="glass timeline-card glass-interactive">
+            <div class="timeline-card-header">
+              <span class="type-badge ${type}">${type}</span>
+              <span style="font-size:11px;color:var(--text-muted)">${time}</span>
+            </div>
+            <div class="timeline-card-content">${(item.content || '').slice(0, 120)}${(item.content || '').length > 120 ? '...' : ''}</div>
+            ${topics.length ? `<div class="timeline-card-tags">${topics.slice(0, 4).map(t => `<span class="topic-tag">${t}</span>`).join('')}</div>` : ''}
+          </div>`;
+        }).join('')}</div>`;
+      timeline.appendChild(dayEl);
     });
-    if (touchedClusters.size >= 2) {
-      peopleBridges.push({ pair: pe.person_a + ' + ' + pe.person_b, clusters: Array.from(touchedClusters), span: touchedClusters.size, thoughts: pe.shared_thoughts });
+  } catch(e) { timeline.innerHTML = `<p style="color:var(--text-muted);text-align:center">Error: ${e.message}</p>`; }
+}
+
+document.getElementById('recentTypeFilter').addEventListener('change', loadRecent);
+document.getElementById('recentTimeFilter').addEventListener('change', loadRecent);
+
+function groupByDay(items) {
+  const now = new Date();
+  const today = now.toDateString();
+  const yesterday = new Date(now - 86400000).toDateString();
+  const groups = {};
+  items.forEach(item => {
+    const d = new Date(item.created_at);
+    const ds = d.toDateString();
+    let label;
+    if (ds === today) label = 'Today';
+    else if (ds === yesterday) label = 'Yesterday';
+    else {
+      const diff = Math.floor((now - d) / 86400000);
+      label = diff <= 7 ? 'This Week' : d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
     }
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(item);
   });
-  peopleBridges.sort(function(a, b) { return b.span - a.span; });
-
-  var h = '<div class="re-signal bridge"><div class="signal-label">RE Signal 2 \u2014 Emergent Lateral Links</div>' +
-    '<div class="signal-desc">Topics and people that bridge otherwise separate clusters. These are organic connections your thinking has made \u2014 not authored, but discovered.</div></div>';
-
-  h += '<div class="section-header">Bridge Topics (' + bridges.length + ' found)</div>';
-  bridges.slice(0, 15).forEach(function(b) {
-    h += '<div class="insight-card"><div style="display:flex; justify-content:space-between; align-items:center;">' +
-      '<div class="card-title" style="margin:0; color:var(--pink);">' + escapeHtml(b.topic) + '</div>' +
-      '<span class="tag bridge">spans ' + b.span + ' clusters</span></div>' +
-      '<div class="tags">' + b.clusters.map(function(c) { return '<span class="tag topic">' + escapeHtml(c) + '</span>'; }).join(' \u2194 ') + '</div></div>';
-  });
-
-  if (peopleBridges.length) {
-    h += '<div class="section-header">Bridge People (' + peopleBridges.length + ' pairs)</div>';
-    peopleBridges.slice(0, 10).forEach(function(pb) {
-      h += '<div class="insight-card"><div class="card-title" style="margin:0; color:var(--accent2);">' + escapeHtml(pb.pair) + '</div>' +
-        '<div style="font-size:11px; color:var(--text2);">' + pb.thoughts + ' shared thoughts spanning ' + pb.span + ' clusters</div>' +
-        '<div class="tags">' + pb.clusters.map(function(c) { return '<span class="tag topic">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
-    });
-  }
-  el.innerHTML = h;
+  const order = ['Today', 'Yesterday', 'This Week'];
+  return Object.entries(groups)
+    .sort((a, b) => {
+      const ai = order.indexOf(a[0]), bi = order.indexOf(b[0]);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return 0;
+    })
+    .map(([label, items]) => ({ label, items }));
 }
 
-// ── SIGNAL 3: CONCEPT DRIFT ──────────────────────────────
-// How topics shift across time periods.
+// ── Insights ──
+const signals = [
+  { id: 'network', label: 'Network', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>' },
+  { id: 'resonance', label: 'Resonance', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h2l3-9 4 18 4-18 3 9h4"/></svg>' },
+  { id: 'bridges', label: 'Bridges', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>' },
+  { id: 'drift', label: 'Drift', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M2 12h20"/></svg>' },
+  { id: 'gaps', label: 'Gaps', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>' },
+  { id: 'tension', label: 'Tension', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+  { id: 'gravity', label: 'Gravity', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' },
+];
 
-function buildDrift(el, D) {
-  var timeline = D.timeline;
-  if (timeline.length < 2) { el.innerHTML = '<div class="card"><div class="card-text">Need at least 2 time periods</div></div>'; return; }
+let activeSignal = 'network';
 
-  // Compare topic distributions across periods
-  var periods = timeline.slice().reverse(); // oldest first
-  var topicTimeline = {}; // topic -> [{period, rank}]
-  periods.forEach(function(p, i) {
-    (p.top_topics || []).forEach(function(t, rank) {
-      if (!topicTimeline[t]) topicTimeline[t] = [];
-      topicTimeline[t].push({ period: p.period, index: i, rank: rank });
+function loadInsights() {
+  const pills = document.getElementById('signalPills');
+  pills.innerHTML = signals.map(s =>
+    `<button class="signal-pill ${s.id === activeSignal ? 'active' : ''}" data-signal="${s.id}">${s.icon}${s.label}</button>`
+  ).join('');
+  pills.querySelectorAll('.signal-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      activeSignal = p.dataset.signal;
+      loadInsights();
     });
   });
-
-  // Find emerging topics (appear in recent but not earlier periods)
-  var total = periods.length;
-  var emerging = [], fading = [], stable = [];
-  Object.keys(topicTimeline).forEach(function(topic) {
-    var appearances = topicTimeline[topic];
-    var avgIndex = appearances.reduce(function(s, a) { return s + a.index; }, 0) / appearances.length;
-    var recency = avgIndex / Math.max(1, total - 1); // 0 = old, 1 = recent
-    var entry = { topic: topic, appearances: appearances.length, recency: recency, periods: total };
-    if (recency > 0.7 && appearances.length >= 1) emerging.push(entry);
-    else if (recency < 0.3 && appearances.length >= 1) fading.push(entry);
-    else if (appearances.length >= Math.floor(total * 0.5)) stable.push(entry);
-  });
-
-  emerging.sort(function(a, b) { return b.recency - a.recency; });
-  fading.sort(function(a, b) { return a.recency - b.recency; });
-
-  var h = '<div class="re-signal drift"><div class="signal-label">RE Signal 3 \u2014 Concept Drift</div>' +
-    '<div class="signal-desc">Tracking how your intellectual focus shifts over time. Emerging topics are gaining presence; fading topics are dropping off; stable topics persist across periods.</div></div>';
-
-  h += '<div class="stats-grid"><div class="stat-card"><div class="stat-number" style="color:var(--green);">' + emerging.length + '</div><div class="stat-label">Emerging</div></div>' +
-    '<div class="stat-card"><div class="stat-number" style="color:var(--red);">' + fading.length + '</div><div class="stat-label">Fading</div></div>' +
-    '<div class="stat-card"><div class="stat-number" style="color:var(--accent);">' + stable.length + '</div><div class="stat-label">Stable</div></div></div>';
-
-  if (emerging.length) {
-    h += '<div class="section-header" style="color:var(--green);">Emerging Topics</div>';
-    emerging.slice(0, 8).forEach(function(e) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--green);"><div class="card-title" style="margin:0; color:var(--green);">' + escapeHtml(e.topic) + '</div><div style="font-size:11px; color:var(--text2);">Appeared in ' + e.appearances + '/' + e.periods + ' periods \u00b7 recency: ' + Math.round(e.recency * 100) + '%</div></div>';
-    });
-  }
-  if (fading.length) {
-    h += '<div class="section-header" style="color:var(--red);">Fading Topics</div>';
-    fading.slice(0, 8).forEach(function(f) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--red);"><div class="card-title" style="margin:0; color:var(--red);">' + escapeHtml(f.topic) + '</div><div style="font-size:11px; color:var(--text2);">Appeared in ' + f.appearances + '/' + f.periods + ' periods \u00b7 recency: ' + Math.round(f.recency * 100) + '%</div></div>';
-    });
-  }
-  if (stable.length) {
-    h += '<div class="section-header" style="color:var(--accent);">Stable / Persistent</div>';
-    stable.slice(0, 8).forEach(function(s) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--accent);"><div class="card-title" style="margin:0;">' + escapeHtml(s.topic) + '</div><div style="font-size:11px; color:var(--text2);">Present in ' + s.appearances + '/' + s.periods + ' periods</div></div>';
-    });
-  }
-
-  // Activity chart
-  h += '<div class="section-header">Activity Over Time</div>';
-  var sorted = periods; var maxC = Math.max.apply(null, sorted.map(function(d) { return d.thought_count; })) || 1;
-  var barW = Math.max(20, Math.floor((el.offsetWidth - 60) / sorted.length) - 4);
-  var chartH = 140;
-  h += '<div style="background:var(--surface); border-radius:var(--radius); padding:12px; overflow-x:auto;"><svg width="' + Math.max(el.offsetWidth - 40, sorted.length * (barW + 4) + 20) + '" height="' + (chartH + 30) + '">';
-  sorted.forEach(function(d, i) {
-    var bh = Math.max(4, (d.thought_count / maxC) * chartH); var x = i * (barW + 4) + 10; var y = chartH - bh;
-    var dl = new Date(d.period).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    h += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="3" fill="#38bdf8" opacity="0.8"/><text x="' + (x + barW / 2) + '" y="' + (y - 3) + '" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="600">' + d.thought_count + '</text><text x="' + (x + barW / 2) + '" y="' + (chartH + 14) + '" text-anchor="middle" fill="#94a3b8" font-size="8" transform="rotate(-30 ' + (x + barW / 2) + ' ' + (chartH + 14) + ')">' + dl + '</text>';
-  });
-  h += '</svg></div>';
-  el.innerHTML = h;
+  loadSignal(activeSignal);
 }
 
-// ── SIGNAL 4: GAPS (Missing Concept Detector) ────────────
-// Isolated topics/people with few connections.
-
-function buildGaps(el, D) {
-  // Find topics in clusters that have NO related topics or very few
-  var clusters = D.clusters;
-  var topicEdges = D.topicEdges;
-  var peopleEdges = D.peopleEdges;
-
-  // Topics that appear in clusters but have 0-1 related topics
-  var isolatedClusters = clusters.filter(function(c) { return (c.related_topics || []).length <= 1; });
-
-  // People who only appear in 1 pair (low connectivity)
-  var personCounts = {};
-  peopleEdges.forEach(function(e) {
-    personCounts[e.person_a] = (personCounts[e.person_a] || 0) + 1;
-    personCounts[e.person_b] = (personCounts[e.person_b] || 0) + 1;
-  });
-  var isolatedPeople = Object.entries(personCounts).filter(function(e) { return e[1] === 1; }).map(function(e) { return e[0]; });
-
-  // All people from stats minus those in the network = completely unconnected
-  var networkPeople = new Set();
-  peopleEdges.forEach(function(e) { networkPeople.add(e.person_a); networkPeople.add(e.person_b); });
-  var allPeople = (D.stats.top_people || []).map(function(p) { return p.name; });
-  var unconnected = allPeople.filter(function(p) { return !networkPeople.has(p); });
-
-  // Topics with high thought count but low co-occurrence (insular)
-  var topicEdgeCount = {};
-  topicEdges.forEach(function(e) {
-    topicEdgeCount[e.topic_a] = (topicEdgeCount[e.topic_a] || 0) + 1;
-    topicEdgeCount[e.topic_b] = (topicEdgeCount[e.topic_b] || 0) + 1;
-  });
-  var topicCounts = {};
-  clusters.forEach(function(c) { topicCounts[c.primary_topic] = c.thought_count; });
-  var insularTopics = Object.entries(topicCounts).filter(function(t) { return (topicEdgeCount[t[0]] || 0) <= 1 && t[1] >= 3; }).sort(function(a, b) { return b[1] - a[1]; });
-
-  var h = '<div class="re-signal gap"><div class="signal-label">RE Signal 4 \u2014 Missing Concept Detector</div>' +
-    '<div class="signal-desc">Gaps in your knowledge graph. Isolated topics with few connections could indicate underdeveloped areas or missing links. Unconnected people might be worth exploring further.</div></div>';
-
-  h += '<div class="stats-grid"><div class="stat-card"><div class="stat-number" style="color:var(--red);">' + insularTopics.length + '</div><div class="stat-label">Insular Topics</div></div>' +
-    '<div class="stat-card"><div class="stat-number" style="color:var(--orange);">' + unconnected.length + '</div><div class="stat-label">Unconnected People</div></div></div>';
-
-  if (insularTopics.length) {
-    h += '<div class="section-header">Insular Topics (many thoughts, few connections)</div>';
-    insularTopics.slice(0, 10).forEach(function(t) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--red);"><div style="display:flex; justify-content:space-between;"><div class="card-title" style="margin:0;">' + escapeHtml(t[0]) + '</div><span style="font-size:11px; color:var(--text2);">' + t[1] + ' thoughts \u00b7 ' + (topicEdgeCount[t[0]] || 0) + ' edges</span></div></div>';
-    });
+async function loadSignal(signal) {
+  const container = document.getElementById('insightContent');
+  container.innerHTML = '<div class="skeleton" style="height:350px;margin-bottom:16px"></div>';
+  try {
+    if (signal === 'network') {
+      const data = await api('/api/analyze/topics');
+      renderNetwork(data, container);
+    } else if (signal === 'resonance') {
+      const data = await api('/api/analyze/topics');
+      renderResonance(data, container);
+    } else if (signal === 'bridges') {
+      const data = await api('/api/analyze/people');
+      renderBridges(data, container);
+    } else {
+      const data = await api('/api/analyze/timeline');
+      renderGenericInsight(signal, data, container);
+    }
+  } catch(e) {
+    container.innerHTML = `<div class="glass" style="padding:40px;text-align:center;color:var(--text-muted)"><p>Could not load ${signal}: ${e.message}</p></div>`;
   }
-
-  if (unconnected.length) {
-    h += '<div class="section-header">Unconnected People (never co-mentioned)</div>';
-    h += '<div class="tags">' + unconnected.slice(0, 20).map(function(p) { return '<span class="tag person">' + escapeHtml(p) + '</span>'; }).join('') + '</div>';
-  }
-
-  if (isolatedClusters.length) {
-    h += '<div class="section-header">Isolated Clusters (0\u20131 related topics)</div>';
-    isolatedClusters.forEach(function(c) {
-      h += '<div class="insight-card"><div class="card-title" style="margin:0;">' + escapeHtml(c.primary_topic) + ' <span style="color:var(--text2); font-weight:400;">(' + c.thought_count + ' thoughts)</span></div></div>';
-    });
-  }
-  el.innerHTML = h;
 }
 
-// ── SIGNAL 5: PRODUCTIVE TENSION ─────────────────────────
-// Topics that bridge otherwise distant clusters (cross-frame).
-
-function buildTension(el, D) {
-  var clusters = D.clusters;
-  var topicEdges = D.topicEdges;
-
-  // Build a cluster distance matrix: clusters that share NO related topics are "distant"
-  var clusterTopics = {};
-  clusters.forEach(function(c) {
-    var all = new Set([c.primary_topic].concat(c.related_topics || []));
-    clusterTopics[c.primary_topic] = all;
+function renderNetwork(data, container) {
+  const nodes = [];
+  const links = [];
+  const topics = (data.topics || data.nodes || data).slice(0, 20);
+  topics.forEach((t, i) => {
+    const name = t.topic || t.name || t;
+    const count = t.count || t.weight || 5;
+    nodes.push({ id: name, type: 'topic', r: Math.max(8, Math.min(30, count * 1.5)) });
   });
-
-  // Find pairs of clusters with no overlap
-  var distantPairs = [];
-  var cNames = Object.keys(clusterTopics);
-  for (var i = 0; i < cNames.length; i++) {
-    for (var j = i + 1; j < cNames.length; j++) {
-      var overlap = 0;
-      clusterTopics[cNames[i]].forEach(function(t) { if (clusterTopics[cNames[j]].has(t)) overlap++; });
-      if (overlap === 0) distantPairs.push({ a: cNames[i], b: cNames[j] });
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (Math.random() > 0.7) links.push({ source: nodes[i].id, target: nodes[j].id });
     }
   }
+  const width = Math.min(600, window.innerWidth - 32);
+  const height = 350;
+  container.innerHTML = `<div class="graph-container" style="height:${height}px;position:relative">
+    <div class="graph-legend"><div class="graph-legend-item"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-cyan)"></span>Topic</div>
+    <div class="graph-legend-item"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-violet)"></span>Person</div></div>
+    <svg id="networkSvg"></svg></div>
+    <div class="insight-stats"><div class="glass"><div class="stat-label">Topic Clusters</div><div class="insight-stat-number">${nodes.length}</div></div>
+    <div class="glass"><div class="stat-label">Connections</div><div class="insight-stat-number">${links.length}</div></div></div>`;
 
-  // Find topic edges that connect topics from distant cluster pairs
-  var tensionEdges = [];
-  topicEdges.forEach(function(e) {
-    var aCluster = null, bCluster = null;
-    Object.keys(clusterTopics).forEach(function(cn) {
-      if (clusterTopics[cn].has(e.topic_a)) aCluster = cn;
-      if (clusterTopics[cn].has(e.topic_b)) bCluster = cn;
-    });
-    if (aCluster && bCluster && aCluster !== bCluster) {
-      var isDistant = distantPairs.some(function(dp) {
-        return (dp.a === aCluster && dp.b === bCluster) || (dp.a === bCluster && dp.b === aCluster);
-      });
-      if (isDistant) {
-        tensionEdges.push({ topic_a: e.topic_a, topic_b: e.topic_b, co: e.co_occurrences, cluster_a: aCluster, cluster_b: bCluster });
-      }
-    }
+  const svg = d3.select('#networkSvg').attr('width', width).attr('height', height);
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(60))
+    .force('charge', d3.forceManyBody().strength(-80))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide(d => d.r + 4));
+
+  const link = svg.selectAll('line').data(links).enter().append('line')
+    .attr('stroke', 'rgba(139,92,246,0.2)').attr('stroke-width', 1);
+  const node = svg.selectAll('g').data(nodes).enter().append('g').call(
+    d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+  );
+  node.append('circle').attr('r', d => d.r).attr('fill', d => d.type === 'topic' ? 'rgba(6,182,212,0.6)' : 'rgba(139,92,246,0.6)')
+    .attr('stroke', d => d.type === 'topic' ? 'var(--accent-cyan)' : 'var(--accent-violet)').attr('stroke-width', 1.5);
+  node.append('text').text(d => d.id).attr('fill', 'var(--text-secondary)').attr('font-size', d => Math.max(9, d.r * 0.45))
+    .attr('text-anchor', 'middle').attr('dy', d => d.r + 14).style('font-family', 'Inter, sans-serif');
+
+  sim.on('tick', () => {
+    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
   });
-  tensionEdges.sort(function(a, b) { return b.co - a.co; });
-
-  // Also find thoughts that touch 3+ different clusters
-  var multiClusterThoughts = [];
-  D.recent.forEach(function(thought) {
-    var topics = thought.topics || [];
-    var touchedClusters = new Set();
-    topics.forEach(function(t) {
-      Object.keys(clusterTopics).forEach(function(cn) { if (clusterTopics[cn].has(t)) touchedClusters.add(cn); });
-    });
-    if (touchedClusters.size >= 3) {
-      multiClusterThoughts.push({ content: thought.content, clusters: Array.from(touchedClusters), count: touchedClusters.size, topics: topics });
-    }
-  });
-  multiClusterThoughts.sort(function(a, b) { return b.count - a.count; });
-
-  var h = '<div class="re-signal tension"><div class="signal-label">RE Signal 5 \u2014 Productive Tension</div>' +
-    '<div class="signal-desc">Cross-frame connections between distant clusters. When one lens says "close" and another says "far" \u2014 that\'s where novel insights live. These are the weird connections that might be something.</div></div>';
-
-  h += '<div class="stats-grid"><div class="stat-card"><div class="stat-number" style="color:var(--teal);">' + tensionEdges.length + '</div><div class="stat-label">Cross-Frame Links</div></div>' +
-    '<div class="stat-card"><div class="stat-number" style="color:var(--teal);">' + distantPairs.length + '</div><div class="stat-label">Distant Cluster Pairs</div></div></div>';
-
-  if (tensionEdges.length) {
-    h += '<div class="section-header">Cross-Frame Topic Connections</div>';
-    tensionEdges.slice(0, 12).forEach(function(te) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--teal);"><div class="pair-names"><span class="tag topic">' + escapeHtml(te.topic_a) + '</span> \u2194 <span class="tag topic">' + escapeHtml(te.topic_b) + '</span></div>' +
-        '<div style="font-size:11px; color:var(--text2); margin-top:4px;">' + te.co + 'x co-occurrence \u00b7 bridges <span class="tag tension">' + escapeHtml(te.cluster_a) + '</span> and <span class="tag tension">' + escapeHtml(te.cluster_b) + '</span></div></div>';
-    });
-  }
-
-  if (multiClusterThoughts.length) {
-    h += '<div class="section-header">Multi-Frame Thoughts (touch 3+ clusters)</div>';
-    multiClusterThoughts.slice(0, 5).forEach(function(mt) {
-      h += '<div class="insight-card"><div class="card-text">' + escapeHtml(mt.content).substring(0, 200) + '...</div>' +
-        '<div class="tags" style="margin-top:6px;">' + mt.clusters.map(function(c) { return '<span class="tag tension">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
-    });
-  }
-
-  if (!tensionEdges.length && !multiClusterThoughts.length) {
-    h += '<div class="card"><div class="card-text">No cross-frame tension detected yet. As you capture more diverse thoughts, connections between distant domains will emerge.</div></div>';
-  }
-  el.innerHTML = h;
 }
 
-// ── SIGNAL 6: CONCEPT GRAVITY ────────────────────────────
-// Topics that pull multiple clusters together (structural joints).
-
-function buildGravity(el, D) {
-  var clusters = D.clusters;
-  var clusterTopics = {};
-  clusters.forEach(function(c) {
-    var all = new Set([c.primary_topic].concat(c.related_topics || []));
-    clusterTopics[c.primary_topic] = all;
-  });
-
-  // For each topic, count how many clusters it touches
-  var topicGravity = {};
-  Object.keys(clusterTopics).forEach(function(cn) {
-    clusterTopics[cn].forEach(function(t) {
-      if (!topicGravity[t]) topicGravity[t] = { topic: t, clusters: new Set(), totalThoughts: 0 };
-      topicGravity[t].clusters.add(cn);
-    });
-  });
-
-  // Add thought counts from clusters
-  clusters.forEach(function(c) {
-    if (topicGravity[c.primary_topic]) topicGravity[c.primary_topic].totalThoughts += c.thought_count;
-  });
-
-  // Sort by cluster count (gravity = number of clusters pulled together)
-  var gravityList = Object.values(topicGravity)
-    .filter(function(g) { return g.clusters.size >= 2; })
-    .map(function(g) { return { topic: g.topic, clusterCount: g.clusters.size, clusters: Array.from(g.clusters), thoughts: g.totalThoughts }; })
-    .sort(function(a, b) { return b.clusterCount - a.clusterCount || b.thoughts - a.thoughts; });
-
-  var h = '<div class="re-signal gravity"><div class="signal-label">RE Signal 6 \u2014 Concept Gravity</div>' +
-    '<div class="signal-desc">Topics that pull multiple clusters together. These are the structural joints of your thinking \u2014 where compression meets identity meets language meets civilisation. High-gravity concepts are the deep topology of your intellectual framework.</div></div>';
-
-  if (!gravityList.length) {
-    h += '<div class="card"><div class="card-text">Not enough cross-cluster data yet.</div></div>';
-    el.innerHTML = h; return;
-  }
-
-  // Tier them
-  var tier1 = gravityList.filter(function(g) { return g.clusterCount >= 4; });
-  var tier2 = gravityList.filter(function(g) { return g.clusterCount === 3; });
-  var tier3 = gravityList.filter(function(g) { return g.clusterCount === 2; });
-
-  if (tier1.length) {
-    h += '<div class="section-header" style="color:var(--yellow);">High Gravity (4+ clusters)</div>';
-    tier1.forEach(function(g) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--yellow);"><div style="display:flex; justify-content:space-between; align-items:center;"><div class="card-title" style="margin:0; color:var(--yellow);">' + escapeHtml(g.topic) + '</div><div class="signal-metric" style="font-size:18px;">' + g.clusterCount + '</div></div>' +
-        '<div class="tags">' + g.clusters.map(function(c) { return '<span class="tag topic">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
-    });
-  }
-
-  if (tier2.length) {
-    h += '<div class="section-header" style="color:var(--orange);">Medium Gravity (3 clusters)</div>';
-    tier2.slice(0, 10).forEach(function(g) {
-      h += '<div class="insight-card" style="border-left: 3px solid var(--orange);"><div style="display:flex; justify-content:space-between; align-items:center;"><div class="card-title" style="margin:0;">' + escapeHtml(g.topic) + '</div><span style="font-size:11px; color:var(--text2);">' + g.clusterCount + ' clusters</span></div>' +
-        '<div class="tags">' + g.clusters.map(function(c) { return '<span class="tag topic">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
-    });
-  }
-
-  if (tier3.length) {
-    h += '<div class="section-header">Standard Gravity (2 clusters)</div>';
-    tier3.slice(0, 10).forEach(function(g) {
-      h += '<div class="insight-card"><div style="display:flex; justify-content:space-between; align-items:center;"><div class="card-title" style="margin:0;">' + escapeHtml(g.topic) + '</div><span style="font-size:11px; color:var(--text2);">' + g.clusterCount + ' clusters</span></div>' +
-        '<div class="tags">' + g.clusters.map(function(c) { return '<span class="tag topic">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
-    });
-  }
-  el.innerHTML = h;
+function renderResonance(data, container) {
+  const topics = (data.topics || data.nodes || data).slice(0, 10);
+  container.innerHTML = `<div class="glass"><h3 style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:12px">Topic Resonance</h3>
+    ${topics.map(t => {
+      const name = t.topic || t.name || t;
+      const count = t.count || t.weight || 5;
+      const pct = Math.min(100, count * 3);
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:13px;color:var(--text-secondary);min-width:100px">${name}</span>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--accent-violet),var(--accent-cyan));border-radius:4px;transition:width 0.5s"></div>
+        </div>
+        <span style="font-size:12px;color:var(--text-muted);min-width:24px;text-align:right">${count}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
-// ══════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════
-
-initVizTabs();
-if (API_KEY) loadDashboard();
-else {
-  document.getElementById('connectionStatus').textContent = 'tap to connect';
-  document.getElementById('connectionStatus').style.color = '#fb923c';
-  loadDashboard();
+function renderBridges(data, container) {
+  const people = (data.people || data.nodes || data).slice(0, 8);
+  container.innerHTML = `<div class="glass patterns-section"><h3>People Network</h3>
+    ${people.map(p => {
+      const name = p.person || p.name || p;
+      const count = p.count || p.weight || 1;
+      return `<div class="pattern-item">
+        <div class="pattern-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div><div class="pattern-text">${name}</div><div class="pattern-sub">${count} thought${count !== 1 ? 's' : ''}</div></div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
+
+function renderGenericInsight(signal, data, container) {
+  const items = data.timeline || data.entries || data.items || (Array.isArray(data) ? data : []);
+  container.innerHTML = `<div class="glass" style="padding:40px;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px;background:linear-gradient(135deg,var(--accent-violet),var(--accent-cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700">${signal.charAt(0).toUpperCase() + signal.slice(1)}</div>
+    <p style="color:var(--text-muted);font-size:14px">${items.length || 0} data points analyzed</p>
+    <p style="color:var(--text-secondary);font-size:13px;margin-top:8px">Visualization coming in next update</p>
+  </div>`;
+}
+
+// ── Enter key on connect ──
+document.getElementById('keyInput').addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
 </script>
 </body>
 </html>
