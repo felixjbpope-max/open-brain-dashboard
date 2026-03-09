@@ -186,7 +186,7 @@
 
   <div class="view" id="viewCapture">
     <div class="section-header">Capture a thought</div>
-    <textarea id="captureInput" rows="5" placeholder="Type anything â an idea, observation, note, question..."></textarea>
+    <textarea id="captureInput" rows="5" placeholder="Type anything — an idea, observation, note, question..."></textarea>
     <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
       <input id="captureSource" placeholder="Source (optional)" style="flex:1;">
       <button class="btn btn-primary" id="captureBtn" onclick="captureThought()">Capture</button>
@@ -268,9 +268,9 @@
 var API_BASE = 'https://ulyfanmimpduissivodl.supabase.co/functions/v1/open-brain-mcp/api';
 var API_KEY = localStorage.getItem('ob_key') || '';
 
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 // CORE API + HELPERS
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 
 function getHeaders() { return { 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' }; }
 
@@ -316,9 +316,9 @@ function switchView(name) {
 function saveKey() { API_KEY = document.getElementById('settingsKey').value.trim(); localStorage.setItem('ob_key', API_KEY); switchView('Dashboard'); }
 function saveKeyFromWelcome() { API_KEY = document.getElementById('keyInput').value.trim(); localStorage.setItem('ob_key', API_KEY); loadDashboard(); }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 // DASHBOARD
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 
 function loadDashboard() {
   var el = document.getElementById('dashContent');
@@ -347,9 +347,9 @@ function loadDashboard() {
   });
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 // CAPTURE / SEARCH / RECENT
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 
 function captureThought() {
   var text = document.getElementById('captureInput').value.trim();
@@ -386,9 +386,9 @@ function loadRecent() {
   }).catch(function(e) { el.innerHTML = '<div class="card"><div class="card-text" style="color:var(--red)">' + escapeHtml(e.message) + '</div></div>'; });
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// INSIGHTS â RESONANCE ENGINE SIGNALS
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
+// INSIGHTS — RESONANCE ENGINE SIGNALS
+// ══════════════════════════════════════════════════════════
 // Modular: each viz is a self-contained function. Adding new ones:
 //   1. Add entry to VIZ_REGISTRY
 //   2. Write a build function: function(el, allData) { ... }
@@ -446,7 +446,7 @@ function loadViz(id) {
     .catch(function(e) { el.innerHTML = '<div class="card"><div class="card-text" style="color:var(--red)">' + escapeHtml(e.message) + '</div></div>'; });
 }
 
-// ââ SIGNAL 0: NETWORK (interactive force graph) ââââââââââ
+// ── SIGNAL 0: NETWORK (interactive force graph) ──────────
 
 function buildNetwork(el, D) {
   var topicEdges = D.topicEdges.slice(0, 30);
@@ -492,7 +492,7 @@ function buildNetwork(el, D) {
   });
 }
 
-// ââ SIGNAL 1: RESONANCE MAP ââââââââââââââââââââââââââââââ
+// ── SIGNAL 1: RESONANCE MAP ──────────────────────────────
 // Which concepts resonate most? Multi-type spread = broad resonance.
 
 function buildResonance(el, D) {
@@ -525,7 +525,7 @@ function buildResonance(el, D) {
   el.innerHTML = h;
 }
 
-// ââ SIGNAL 2: BRIDGES (Emergent Lateral Links) âââââââââââ
+// ── SIGNAL 2: BRIDGES (Emergent Lateral Links) ───────────
 // Topics that connect otherwise separate clusters.
 
 function buildBridges(el, D) {
@@ -590,7 +590,7 @@ function buildBridges(el, D) {
   el.innerHTML = h;
 }
 
-// ââ SIGNAL 3: CONCEPT DRIFT ââââââââââââââââââââââââââââââ
+// ── SIGNAL 3: CONCEPT DRIFT ──────────────────────────────
 // How topics shift across time periods.
 
 function buildDrift(el, D) {
@@ -664,7 +664,7 @@ function buildDrift(el, D) {
   el.innerHTML = h;
 }
 
-// ââ SIGNAL 4: GAPS (Missing Concept Detector) ââââââââââââ
+// ── SIGNAL 4: GAPS (Missing Concept Detector) ────────────
 // Isolated topics/people with few connections.
 
 function buildGaps(el, D) {
@@ -727,7 +727,7 @@ function buildGaps(el, D) {
   el.innerHTML = h;
 }
 
-// ââ SIGNAL 5: PRODUCTIVE TENSION âââââââââââââââââââââââââ
+// ── SIGNAL 5: PRODUCTIVE TENSION ─────────────────────────
 // Topics that bridge otherwise distant clusters (cross-frame).
 
 function buildTension(el, D) {
@@ -813,7 +813,7 @@ function buildTension(el, D) {
   el.innerHTML = h;
 }
 
-// ââ SIGNAL 6: CONCEPT GRAVITY ââââââââââââââââââââââââââââ
+// ── SIGNAL 6: CONCEPT GRAVITY ────────────────────────────
 // Topics that pull multiple clusters together (structural joints).
 
 function buildGravity(el, D) {
@@ -883,9 +883,9 @@ function buildGravity(el, D) {
   el.innerHTML = h;
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 // INIT
-// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════════════════
 
 initVizTabs();
 if (API_KEY) loadDashboard();
