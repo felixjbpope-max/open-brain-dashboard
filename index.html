@@ -272,7 +272,8 @@ var API_KEY = localStorage.getItem('ob_key') || '';
 // CORE API + HELPERS
 // ══════════════════════════════════════════════════════════
 
-function getHeaders() { return { 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' }; }
+var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVseWZhbm1pbXBkdWlzc2l2b2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NzM2MTEsImV4cCI6MjA4ODE0OTYxMX0.cZsMHpzs43SsaycAkvUWaqAtE1C4BfjdEG-ekliOIcE';
+function getHeaders() { return { 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'x-brain-key': API_KEY }; }
 
 function api(path, opts) {
   opts = opts || {};
