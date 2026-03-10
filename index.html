@@ -1282,10 +1282,16 @@ async function loadSignal(signal) {
   }
 }
 
+function toArray(val) {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object') return Object.entries(val).map(([k, v]) => typeof v === 'object' ? { name: k, ...v } : { name: k, count: v });
+  return [];
+}
+
 function renderNetwork(data, container) {
   const nodes = [];
   const links = [];
-  const topics = (data.topics || data.nodes || data).slice(0, 20);
+  const topics = toArray(data.topics || data.nodes || data).slice(0, 20);
   topics.forEach((t, i) => {
     const name = t.topic || t.name || t;
     const count = t.count || t.weight || 5;
@@ -1333,7 +1339,7 @@ function renderNetwork(data, container) {
 }
 
 function renderResonance(data, container) {
-  const topics = (data.topics || data.nodes || data).slice(0, 10);
+  const topics = toArray(data.topics || data.nodes || data).slice(0, 10);
   const maxCount = Math.max(...topics.map(t => t.count || t.weight || 5));
   container.innerHTML = `<div class="card"><div class="section-label">Topic Strength</div>
     ${topics.map(t => {
@@ -1352,7 +1358,7 @@ function renderResonance(data, container) {
 }
 
 function renderBridges(data, container) {
-  const people = (data.people || data.nodes || data).slice(0, 8);
+  const people = toArray(data.people || data.nodes || data).slice(0, 8);
   container.innerHTML = `<div class="card"><div class="section-label">People Network</div>
     ${people.map(p => {
       const name = p.person || p.name || p;
@@ -1366,7 +1372,7 @@ function renderBridges(data, container) {
 }
 
 function renderTimeline(data, container) {
-  const entries = data.timeline || data.entries || data.items || (Array.isArray(data) ? data : []);
+  const entries = toArray(data.timeline || data.entries || data.items || data);
   if (!entries.length) {
     container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No timeline data available</p></div>`;
     return;
@@ -1389,12 +1395,11 @@ function renderTimeline(data, container) {
 }
 
 function renderClusters(data, container) {
-  const clusters = data.clusters || data.groups || data;
-  if (!clusters.length && !Object.keys(clusters).length) {
+  const items = toArray(data.clusters || data.groups || data);
+  if (!items.length) {
     container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No cluster data available</p></div>`;
     return;
   }
-  const items = Array.isArray(clusters) ? clusters : Object.entries(clusters).map(([k, v]) => ({ name: k, items: v }));
   container.innerHTML = `<div class="card"><div class="section-label">Thought Clusters</div>
     ${items.slice(0, 8).map(c => {
       const name = c.name || c.label || c.cluster || 'Unnamed';
