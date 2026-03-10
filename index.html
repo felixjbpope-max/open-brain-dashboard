@@ -950,7 +950,7 @@ async function loadDashboard(statsData) {
     const stats = statsData || await api('/api/stats');
     document.getElementById('headerRight').textContent = `${stats.total_thoughts || 0} thoughts`;
     renderStats(stats);
-    renderDonut(stats.by_type || []);
+    renderDonut(stats.counts_by_type || stats.by_type || {});
     renderHeatmap(stats);
     renderTopics(stats.top_topics || []);
     renderPeople(stats.top_people || []);
@@ -961,7 +961,7 @@ function renderStats(stats) {
   const grid = document.getElementById('statsGrid');
   const items = [
     { label: 'Total Thoughts', value: stats.total_thoughts || 0 },
-    { label: 'Types', value: stats.type_count || Object.keys(stats.by_type || {}).length || 0 },
+    { label: 'Types', value: stats.type_count || Object.keys(stats.counts_by_type || stats.by_type || {}).length || 0 },
     { label: 'Topics', value: (stats.top_topics || []).length },
     { label: 'People', value: (stats.top_people || []).length }
   ];
@@ -1263,7 +1263,7 @@ async function loadSignal(signal) {
       const data = await api('/api/analyze/topics');
       renderNetwork(data, container);
     } else if (signal === 'resonance') {
-      const data = await api('/api/analyze/topics');
+      const data = await api('/api/stats');
       renderResonance(data, container);
     } else if (signal === 'bridges') {
       const data = await api('/api/analyze/people');
@@ -1289,36 +1289,47 @@ function toArray(val) {
 }
 
 function renderNetwork(data, container) {
-  const nodes = [];
-  const links = [];
-  const topics = toArray(data.topics || data.nodes || data).slice(0, 20);
-  topics.forEach((t, i) => {
-    const name = t.topic || t.name || t;
-    const count = t.count || t.weight || 5;
-    nodes.push({ id: name, type: 'topic', r: Math.max(8, Math.min(28, count * 1.5)) });
-  });
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      if (Math.random() > 0.7) links.push({ source: nodes[i].id, target: nodes[j].id });
-    }
+  // API returns: { topic_graph: [{ topic_a, topic_b, co_occurrences, example_thought_id }] }
+  const pairs = data.topic_graph || [];
+  if (!pairs.length) {
+    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No topic network data available</p></div>`;
+    return;
   }
+
+  // Extract unique topics and count their total co-occurrences
+  const topicWeights = {};
+  pairs.forEach(p => {
+    topicWeights[p.topic_a] = (topicWeights[p.topic_a] || 0) + (p.co_occurrences || 1);
+    topicWeights[p.topic_b] = (topicWeights[p.topic_b] || 0) + (p.co_occurrences || 1);
+  });
+
+  const nodes = Object.entries(topicWeights).map(([name, weight]) => ({
+    id: name, type: 'topic', r: Math.max(10, Math.min(30, Math.sqrt(weight) * 5))
+  }));
+
+  const links = pairs.map(p => ({
+    source: p.topic_a, target: p.topic_b, value: p.co_occurrences || 1
+  }));
+
   const width = Math.min(600, window.innerWidth - 32);
   const height = 350;
   container.innerHTML = `<div class="graph-container" style="height:${height}px;position:relative">
     <div class="graph-legend"><div class="graph-legend-item"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span>Topic</div></div>
     <svg id="networkSvg"></svg></div>
-    <div class="insight-stats"><div class="card"><div class="stat-label">Topic Clusters</div><div class="insight-stat-number">${nodes.length}</div></div>
+    <div class="insight-stats"><div class="card"><div class="stat-label">Topics</div><div class="insight-stat-number">${nodes.length}</div></div>
     <div class="card"><div class="stat-label">Connections</div><div class="insight-stat-number">${links.length}</div></div></div>`;
 
   const svg = d3.select('#networkSvg').attr('width', width).attr('height', height);
+  const maxLinkVal = Math.max(...links.map(l => l.value), 1);
   const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(60))
-    .force('charge', d3.forceManyBody().strength(-80))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 80 - (d.value / maxLinkVal) * 30))
+    .force('charge', d3.forceManyBody().strength(-100))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide(d => d.r + 4));
+    .force('collision', d3.forceCollide(d => d.r + 6));
 
   const link = svg.selectAll('line').data(links).enter().append('line')
-    .attr('stroke', 'var(--border)').attr('stroke-width', 1);
+    .attr('stroke', 'var(--border)').attr('stroke-width', d => Math.max(1, (d.value / maxLinkVal) * 3))
+    .attr('stroke-opacity', d => 0.3 + (d.value / maxLinkVal) * 0.5);
   const node = svg.selectAll('g').data(nodes).enter().append('g').call(
     d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
     .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -1339,15 +1350,20 @@ function renderNetwork(data, container) {
 }
 
 function renderResonance(data, container) {
-  const topics = toArray(data.topics || data.nodes || data).slice(0, 10);
-  const maxCount = Math.max(...topics.map(t => t.count || t.weight || 5));
+  // API /api/stats returns: { top_topics: [{ topic, count }], ... }
+  const topics = (data.top_topics || []).slice(0, 12);
+  if (!topics.length) {
+    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No topic data available</p></div>`;
+    return;
+  }
+  const maxCount = Math.max(...topics.map(t => t.count || 0), 1);
   container.innerHTML = `<div class="card"><div class="section-label">Topic Strength</div>
     ${topics.map(t => {
-      const name = t.topic || t.name || t;
-      const count = t.count || t.weight || 5;
+      const name = t.topic || t.name || 'unknown';
+      const count = t.count || 0;
       const pct = Math.min(100, (count / maxCount) * 100);
       return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-family:var(--serif);font-size:14px;color:var(--ink-secondary);min-width:100px">${name}</span>
+        <span style="font-family:var(--serif);font-size:14px;color:var(--ink-secondary);min-width:100px;text-transform:capitalize">${name}</span>
         <div style="flex:1;height:6px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
           <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.5s"></div>
         </div>
@@ -1358,56 +1374,74 @@ function renderResonance(data, container) {
 }
 
 function renderBridges(data, container) {
-  const people = toArray(data.people || data.nodes || data).slice(0, 8);
+  // API returns: { people_network: [{ person_a, person_b, shared_thoughts, shared_topics }] }
+  const pairs = data.people_network || [];
+  if (!pairs.length) {
+    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No people network data available</p></div>`;
+    return;
+  }
   container.innerHTML = `<div class="card"><div class="section-label">People Network</div>
-    ${people.map(p => {
-      const name = p.person || p.name || p;
-      const count = p.count || p.weight || 1;
+    ${pairs.slice(0, 10).map(p => {
+      const sharedTopics = (p.shared_topics || []).slice(0, 3);
       return `<div class="pattern-item">
-        <div class="pattern-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div><div class="pattern-text">${name}</div><div class="pattern-sub">${count} mention${count !== 1 ? 's' : ''}</div></div>
+        <div class="pattern-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div style="flex:1">
+          <div class="pattern-text">${p.person_a} &amp; ${p.person_b}</div>
+          <div class="pattern-sub">${p.shared_thoughts || 0} shared thought${(p.shared_thoughts || 0) !== 1 ? 's' : ''}${sharedTopics.length ? ' · ' + sharedTopics.join(', ') : ''}</div>
+        </div>
       </div>`;
     }).join('')}
   </div>`;
 }
 
 function renderTimeline(data, container) {
-  const entries = toArray(data.timeline || data.entries || data.items || data);
+  // API returns: { timeline: [{ period, thought_count, top_topics }] }
+  const entries = data.timeline || [];
   if (!entries.length) {
     container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No timeline data available</p></div>`;
     return;
   }
+  const maxVal = Math.max(...entries.map(x => x.thought_count || 0), 1);
   container.innerHTML = `<div class="card"><div class="section-label">Activity Over Time</div>
-    <div style="padding:8px 0">${entries.slice(0, 12).map(e => {
-      const label = e.date || e.period || e.label || '';
-      const count = e.count || e.value || 0;
-      const maxVal = Math.max(...entries.map(x => x.count || x.value || 0));
+    <div style="padding:8px 0">${entries.slice(0, 14).map(e => {
+      const label = e.period || '';
+      const count = e.thought_count || 0;
       const pct = maxVal > 0 ? (count / maxVal) * 100 : 0;
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="font-size:12px;color:var(--ink-muted);min-width:80px">${label}</span>
-        <div style="flex:1;height:6px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
-          <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.5s"></div>
+      const topics = (e.top_topics || []).slice(0, 3);
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--ink-muted);min-width:80px;font-weight:500">${label}</span>
+          <div style="flex:1;height:6px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.5s"></div>
+          </div>
+          <span style="font-size:11px;color:var(--ink-faint);min-width:24px;text-align:right">${count}</span>
         </div>
-        <span style="font-size:11px;color:var(--ink-faint);min-width:20px;text-align:right">${count}</span>
+        ${topics.length ? `<div style="margin-left:90px;display:flex;gap:4px;flex-wrap:wrap">${topics.map(t => `<span class="topic-tag" style="font-size:10px">${t}</span>`).join('')}</div>` : ''}
       </div>`;
     }).join('')}</div>
   </div>`;
 }
 
 function renderClusters(data, container) {
-  const items = toArray(data.clusters || data.groups || data);
+  // API returns: { clusters: [{ primary_topic, thought_count, related_topics, types: {idea: N, ...}, date_range: {earliest, latest} }] }
+  const items = data.clusters || [];
   if (!items.length) {
     container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No cluster data available</p></div>`;
     return;
   }
   container.innerHTML = `<div class="card"><div class="section-label">Thought Clusters</div>
     ${items.slice(0, 8).map(c => {
-      const name = c.name || c.label || c.cluster || 'Unnamed';
-      const count = c.count || (c.items ? c.items.length : c.size || 0);
-      const desc = c.description || c.summary || '';
-      return `<div class="pattern-item">
+      const name = c.primary_topic || 'Unnamed';
+      const count = c.thought_count || 0;
+      const related = (c.related_topics || []).slice(0, 4);
+      const types = c.types ? Object.entries(c.types).filter(([k,v]) => v > 0 && k !== 'null' && k !== 'untyped').sort((a,b) => b[1] - a[1]).slice(0, 3) : [];
+      return `<div class="pattern-item" style="flex-wrap:wrap">
         <div class="pattern-icon" style="border-radius:var(--radius-sm)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></div>
-        <div style="flex:1"><div class="pattern-text">${name}</div><div class="pattern-sub">${count} thought${count !== 1 ? 's' : ''}${desc ? ' · ' + desc.slice(0, 50) : ''}</div></div>
+        <div style="flex:1;min-width:0">
+          <div class="pattern-text" style="text-transform:capitalize">${name}</div>
+          <div class="pattern-sub">${count} thought${count !== 1 ? 's' : ''}${types.length ? ' · ' + types.map(([t,n]) => t + ': ' + n).join(', ') : ''}</div>
+          ${related.length ? `<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">${related.map(r => `<span class="topic-tag" style="font-size:10px">${r}</span>`).join('')}</div>` : ''}
+        </div>
       </div>`;
     }).join('')}
   </div>`;
