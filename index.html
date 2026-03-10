@@ -1296,54 +1296,329 @@ function renderNetwork(data, container) {
     return;
   }
 
-  // Extract unique topics and count their total co-occurrences
+  // Build adjacency data: total weight, connection count, and neighbor list per topic
   const topicWeights = {};
+  const topicConnections = {};
   pairs.forEach(p => {
-    topicWeights[p.topic_a] = (topicWeights[p.topic_a] || 0) + (p.co_occurrences || 1);
-    topicWeights[p.topic_b] = (topicWeights[p.topic_b] || 0) + (p.co_occurrences || 1);
+    const w = p.co_occurrences || 1;
+    topicWeights[p.topic_a] = (topicWeights[p.topic_a] || 0) + w;
+    topicWeights[p.topic_b] = (topicWeights[p.topic_b] || 0) + w;
+    if (!topicConnections[p.topic_a]) topicConnections[p.topic_a] = [];
+    if (!topicConnections[p.topic_b]) topicConnections[p.topic_b] = [];
+    topicConnections[p.topic_a].push({ topic: p.topic_b, strength: w });
+    topicConnections[p.topic_b].push({ topic: p.topic_a, strength: w });
   });
 
   const nodes = Object.entries(topicWeights).map(([name, weight]) => ({
-    id: name, type: 'topic', r: Math.max(10, Math.min(30, Math.sqrt(weight) * 5))
+    id: name, weight, connections: (topicConnections[name] || []).length,
+    r: Math.max(12, Math.min(34, Math.sqrt(weight) * 5))
   }));
 
   const links = pairs.map(p => ({
     source: p.topic_a, target: p.topic_b, value: p.co_occurrences || 1
   }));
 
+  // Sort pairs by strength for the detail panel
+  const sortedPairs = [...pairs].sort((a, b) => (b.co_occurrences || 0) - (a.co_occurrences || 0));
+
   const width = Math.min(600, window.innerWidth - 32);
-  const height = 350;
-  container.innerHTML = `<div class="graph-container" style="height:${height}px;position:relative">
-    <div class="graph-legend"><div class="graph-legend-item"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span>Topic</div></div>
-    <svg id="networkSvg"></svg></div>
-    <div class="insight-stats"><div class="card"><div class="stat-label">Topics</div><div class="insight-stat-number">${nodes.length}</div></div>
-    <div class="card"><div class="stat-label">Connections</div><div class="insight-stat-number">${links.length}</div></div></div>`;
+  const height = 400;
+
+  container.innerHTML = `
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--ink-faint);font-weight:500;line-height:24px">TAP A TOPIC TO EXPLORE · DRAG TO REARRANGE</span>
+    </div>
+    <div class="graph-container" style="height:${height}px;position:relative">
+      <svg id="networkSvg"></svg>
+      <div id="networkTooltip" style="display:none;position:absolute;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:var(--shadow-md);pointer-events:none;z-index:10;max-width:220px;font-size:12px"></div>
+    </div>
+    <div id="networkDetail" style="margin-top:12px"></div>
+    <div class="insight-stats" style="margin-top:12px">
+      <div class="card"><div class="stat-label">Topics</div><div class="insight-stat-number">${nodes.length}</div></div>
+      <div class="card"><div class="stat-label">Connections</div><div class="insight-stat-number">${links.length}</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="section-label">Strongest Connections</div>
+      ${sortedPairs.slice(0, 8).map(p => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light)">
+          <span style="font-family:var(--serif);font-size:13px;color:var(--ink-secondary);text-transform:capitalize;flex:1">${p.topic_a}</span>
+          <span style="font-size:10px;color:var(--ink-faint)">↔</span>
+          <span style="font-family:var(--serif);font-size:13px;color:var(--ink-secondary);text-transform:capitalize;flex:1">${p.topic_b}</span>
+          <span style="background:var(--accent-wash-strong);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill)">${p.co_occurrences}×</span>
+        </div>
+      `).join('')}
+    </div>`;
 
   const svg = d3.select('#networkSvg').attr('width', width).attr('height', height);
+  const tooltip = document.getElementById('networkTooltip');
+  const detailPanel = document.getElementById('networkDetail');
   const maxLinkVal = Math.max(...links.map(l => l.value), 1);
+  const maxWeight = Math.max(...nodes.map(n => n.weight), 1);
+  let selectedNode = null;
+
   const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 80 - (d.value / maxLinkVal) * 30))
-    .force('charge', d3.forceManyBody().strength(-100))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 90 - (d.value / maxLinkVal) * 40))
+    .force('charge', d3.forceManyBody().strength(-120))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide(d => d.r + 6));
+    .force('collision', d3.forceCollide(d => d.r + 8))
+    .force('x', d3.forceX(width / 2).strength(0.05))
+    .force('y', d3.forceY(height / 2).strength(0.05));
 
   const link = svg.selectAll('line').data(links).enter().append('line')
-    .attr('stroke', 'var(--border)').attr('stroke-width', d => Math.max(1, (d.value / maxLinkVal) * 3))
-    .attr('stroke-opacity', d => 0.3 + (d.value / maxLinkVal) * 0.5);
-  const node = svg.selectAll('g').data(nodes).enter().append('g').call(
-    d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-    .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-    .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
-  );
+    .attr('stroke', '#d8d0c4').attr('stroke-width', d => Math.max(1, (d.value / maxLinkVal) * 4))
+    .attr('stroke-opacity', d => 0.25 + (d.value / maxLinkVal) * 0.5)
+    .style('cursor', 'pointer')
+    .on('mouseover', function(e, d) {
+      d3.select(this).attr('stroke', '#8b6b3d').attr('stroke-opacity', 1);
+      tooltip.style.display = 'block';
+      tooltip.innerHTML = `<div style="font-weight:600;color:var(--ink-primary);text-transform:capitalize;margin-bottom:4px">${d.source.id} ↔ ${d.target.id}</div><div style="color:var(--ink-muted)">Co-occur in <strong style="color:var(--accent)">${d.value}</strong> thought${d.value !== 1 ? 's' : ''}</div>`;
+      tooltip.style.left = (e.offsetX + 10) + 'px';
+      tooltip.style.top = (e.offsetY - 30) + 'px';
+    })
+    .on('mouseout', function(e, d) {
+      if (!selectedNode) {
+        d3.select(this).attr('stroke', '#d8d0c4').attr('stroke-opacity', 0.25 + (d.value / maxLinkVal) * 0.5);
+      } else { applyHighlight(); }
+      tooltip.style.display = 'none';
+    });
+
+  const node = svg.selectAll('g.node').data(nodes).enter().append('g').attr('class', 'node')
+    .style('cursor', 'pointer')
+    .call(
+      d3.drag()
+        .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+        .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+
+  // Node circles with gradient-like fill based on weight
   node.append('circle').attr('r', d => d.r)
-    .attr('fill', 'rgba(139,107,61,0.15)')
-    .attr('stroke', 'var(--accent)').attr('stroke-width', 1.5);
+    .attr('fill', d => `rgba(139,107,61,${0.08 + (d.weight / maxWeight) * 0.2})`)
+    .attr('stroke', '#8b6b3d').attr('stroke-width', 1.5);
+
+  // Inner count label for larger nodes
+  node.filter(d => d.r >= 18).append('text')
+    .text(d => d.weight)
+    .attr('fill', 'var(--accent)').attr('font-size', d => Math.max(9, d.r * 0.4))
+    .attr('text-anchor', 'middle').attr('dy', '0.35em')
+    .style('font-family', 'Inter, sans-serif').style('font-weight', '600').style('pointer-events', 'none');
+
+  // Topic name below
   node.append('text').text(d => d.id)
-    .attr('fill', 'var(--ink-secondary)').attr('font-size', d => Math.max(9, d.r * 0.45))
+    .attr('fill', 'var(--ink-secondary)').attr('font-size', d => Math.max(10, Math.min(13, d.r * 0.5)))
     .attr('text-anchor', 'middle').attr('dy', d => d.r + 14)
-    .style('font-family', 'EB Garamond, serif');
+    .style('font-family', 'EB Garamond, serif').style('text-transform', 'capitalize').style('pointer-events', 'none');
+
+  // Hover on node
+  node.on('mouseover', function(e, d) {
+    if (selectedNode) return;
+    d3.select(this).select('circle').attr('stroke-width', 3);
+    const conns = (topicConnections[d.id] || []).sort((a, b) => b.strength - a.strength).slice(0, 5);
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<div style="font-weight:600;color:var(--ink-primary);text-transform:capitalize;margin-bottom:4px">${d.id}</div>
+      <div style="color:var(--ink-muted);margin-bottom:4px">${d.connections} connections · weight ${d.weight}</div>
+      ${conns.length ? '<div style="border-top:1px solid var(--border-light);padding-top:4px;margin-top:4px">' +
+        conns.map(c => `<div style="display:flex;justify-content:space-between;gap:8px"><span style="text-transform:capitalize">${c.topic}</span><span style="color:var(--accent);font-weight:600">${c.strength}×</span></div>`).join('') + '</div>' : ''}`;
+    const svgRect = document.getElementById('networkSvg').getBoundingClientRect();
+    const containerRect = document.querySelector('.graph-container').getBoundingClientRect();
+    tooltip.style.left = Math.min(width - 230, Math.max(0, d.x - 10)) + 'px';
+    tooltip.style.top = Math.max(0, d.y - d.r - 60) + 'px';
+  })
+  .on('mouseout', function(e, d) {
+    if (selectedNode) return;
+    d3.select(this).select('circle').attr('stroke-width', 1.5);
+    tooltip.style.display = 'none';
+  });
+
+  // Click node to select/deselect and fetch thoughts
+  node.on('click', function(e, d) {
+    e.stopPropagation();
+    if (selectedNode === d.id) {
+      selectedNode = null;
+      clearHighlight();
+      detailPanel.innerHTML = '';
+    } else {
+      selectedNode = d.id;
+      applyHighlight();
+      showNodeDetail(d);
+      fetchTopicThoughts(d.id);
+    }
+  });
+
+  // Click connection line to explore the relationship
+  link.on('click', function(e, d) {
+    e.stopPropagation();
+    selectedNode = null;
+    clearHighlight();
+    const sId = typeof d.source === 'object' ? d.source.id : d.source;
+    const tId = typeof d.target === 'object' ? d.target.id : d.target;
+    fetchConnectionThoughts(sId, tId, d.value);
+  });
+
+  // Click background to deselect
+  svg.on('click', () => {
+    selectedNode = null;
+    clearHighlight();
+    detailPanel.innerHTML = '';
+  });
+
+  function applyHighlight() {
+    const connectedIds = new Set([selectedNode]);
+    links.forEach(l => {
+      const sId = typeof l.source === 'object' ? l.source.id : l.source;
+      const tId = typeof l.target === 'object' ? l.target.id : l.target;
+      if (sId === selectedNode) connectedIds.add(tId);
+      if (tId === selectedNode) connectedIds.add(sId);
+    });
+    node.select('circle')
+      .attr('opacity', d => connectedIds.has(d.id) ? 1 : 0.15)
+      .attr('stroke-width', d => d.id === selectedNode ? 3 : 1.5);
+    node.selectAll('text')
+      .attr('opacity', d => connectedIds.has(d.id) ? 1 : 0.1);
+    link.attr('stroke', d => {
+      const sId = typeof d.source === 'object' ? d.source.id : d.source;
+      const tId = typeof d.target === 'object' ? d.target.id : d.target;
+      return (sId === selectedNode || tId === selectedNode) ? '#8b6b3d' : '#d8d0c4';
+    }).attr('stroke-opacity', d => {
+      const sId = typeof d.source === 'object' ? d.source.id : d.source;
+      const tId = typeof d.target === 'object' ? d.target.id : d.target;
+      return (sId === selectedNode || tId === selectedNode) ? 0.8 : 0.06;
+    });
+  }
+
+  function clearHighlight() {
+    node.select('circle').attr('opacity', 1).attr('stroke-width', 1.5);
+    node.selectAll('text').attr('opacity', 1);
+    link.attr('stroke', '#d8d0c4')
+      .attr('stroke-opacity', d => 0.25 + (d.value / maxLinkVal) * 0.5);
+  }
+
+  function showNodeDetail(d) {
+    const conns = (topicConnections[d.id] || []).sort((a, b) => b.strength - a.strength);
+    const totalStrength = conns.reduce((s, c) => s + c.strength, 0);
+    detailPanel.innerHTML = `<div class="card" style="border-left:3px solid var(--accent)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-family:var(--serif);font-size:18px;font-weight:500;text-transform:capitalize;color:var(--ink-primary)">${d.id}</span>
+        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer" onclick="document.getElementById('networkDetail').innerHTML=''">✕ close</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:12px">
+        <div><span style="font-size:22px;font-weight:600;color:var(--accent);font-family:var(--serif)">${d.connections}</span><div style="font-size:10px;color:var(--ink-faint);text-transform:uppercase">connections</div></div>
+        <div><span style="font-size:22px;font-weight:600;color:var(--accent);font-family:var(--serif)">${totalStrength}</span><div style="font-size:10px;color:var(--ink-faint);text-transform:uppercase">co-occurrences</div></div>
+      </div>
+      <div class="section-label">Connected Topics</div>
+      ${conns.map(c => {
+        const pct = Math.min(100, (c.strength / (conns[0]?.strength || 1)) * 100);
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-family:var(--serif);font-size:13px;color:var(--ink-secondary);min-width:90px;text-transform:capitalize">${c.topic}</span>
+          <div style="flex:1;height:5px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;color:var(--ink-faint);min-width:28px;text-align:right">${c.strength}×</span>
+        </div>`;
+      }).join('')}
+      <div id="topicThoughts" style="margin-top:14px"><div class="skeleton" style="height:60px"></div></div>
+    </div>`;
+  }
+
+  async function fetchTopicThoughts(topicName) {
+    const thoughtsEl = document.getElementById('topicThoughts');
+    if (!thoughtsEl) return;
+    thoughtsEl.innerHTML = '<div class="skeleton" style="height:60px"></div>';
+    try {
+      const data = await api('/api/search?q=' + encodeURIComponent(topicName) + '&limit=8');
+      const results = (data.results || []).filter(r => (r.topics || []).some(t => t.toLowerCase() === topicName.toLowerCase()));
+      if (!results.length) {
+        thoughtsEl.innerHTML = '<div style="font-size:12px;color:var(--ink-faint);font-style:italic;padding:8px 0">No thoughts found for this topic</div>';
+        return;
+      }
+      thoughtsEl.innerHTML = `<div class="section-label" style="margin-top:4px">Thoughts about ${topicName}</div>` +
+        results.slice(0, 6).map((r, idx) => {
+          const type = r.type || 'untyped';
+          const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+          const topics = (r.topics || []).filter(t => t.toLowerCase() !== topicName.toLowerCase()).slice(0, 3);
+          const people = (r.people || []).slice(0, 2);
+          const content = (r.content || '').slice(0, 180);
+          return `<div class="card card-interactive" style="margin-bottom:8px;padding:12px;cursor:pointer" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span class="type-badge ${type}">${type}</span>
+              <span style="font-size:10px;color:var(--ink-faint);font-style:italic">${date}</span>
+            </div>
+            <div style="font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--ink-secondary)">${content}${(r.content || '').length > 180 ? '...' : ''}</div>
+            <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+              ${topics.map(t => '<span class="topic-tag" style="font-size:10px">' + t + '</span>').join('')}
+              ${people.map(p => '<span style="font-size:10px;color:var(--type-question);background:rgba(122,107,171,0.1);padding:1px 6px;border-radius:10px">' + p + '</span>').join('')}
+            </div>
+          </div>`;
+        }).join('');
+    } catch(e) {
+      thoughtsEl.innerHTML = '<div style="font-size:12px;color:var(--type-observation)">Failed to load thoughts: ' + e.message + '</div>';
+    }
+  }
+
+  async function fetchConnectionThoughts(topicA, topicB, coCount) {
+    detailPanel.innerHTML = `<div class="card" style="border-left:3px solid var(--accent)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-family:var(--serif);font-size:16px;font-weight:500;color:var(--ink-primary);text-transform:capitalize">${topicA} ↔ ${topicB}</span>
+        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer" onclick="document.getElementById('networkDetail').innerHTML=''">✕ close</span>
+      </div>
+      <div style="margin-bottom:12px"><span style="font-size:13px;color:var(--ink-muted)">These topics co-occur in <strong style="color:var(--accent)">${coCount}</strong> thought${coCount !== 1 ? 's' : ''}. Here's what connects them:</span></div>
+      <div id="connectionThoughts"><div class="skeleton" style="height:60px"></div></div>
+    </div>`;
+    const thoughtsEl = document.getElementById('connectionThoughts');
+    try {
+      const data = await api('/api/search?q=' + encodeURIComponent(topicA + ' ' + topicB) + '&limit=12');
+      const results = (data.results || []).filter(r => {
+        const rTopics = (r.topics || []).map(t => t.toLowerCase());
+        return rTopics.includes(topicA.toLowerCase()) && rTopics.includes(topicB.toLowerCase());
+      });
+      if (!results.length) {
+        // Fallback: show results that match either topic
+        const fallback = (data.results || []).filter(r => {
+          const rTopics = (r.topics || []).map(t => t.toLowerCase());
+          return rTopics.includes(topicA.toLowerCase()) || rTopics.includes(topicB.toLowerCase());
+        });
+        if (!fallback.length) {
+          thoughtsEl.innerHTML = '<div style="font-size:12px;color:var(--ink-faint);font-style:italic">No matching thoughts found</div>';
+          return;
+        }
+        thoughtsEl.innerHTML = '<div style="font-size:11px;color:var(--ink-faint);margin-bottom:8px;font-style:italic">Showing related thoughts (exact overlap not found in search results):</div>' +
+          renderThoughtCards(fallback.slice(0, 5), [topicA, topicB]);
+        return;
+      }
+      thoughtsEl.innerHTML = renderThoughtCards(results.slice(0, 6), [topicA, topicB]);
+    } catch(e) {
+      thoughtsEl.innerHTML = '<div style="font-size:12px;color:var(--type-observation)">Failed to load: ' + e.message + '</div>';
+    }
+  }
+
+  function renderThoughtCards(thoughts, highlightTopics) {
+    return thoughts.map(r => {
+      const type = r.type || 'untyped';
+      const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+      const topics = (r.topics || []).slice(0, 4);
+      const people = (r.people || []).slice(0, 2);
+      const content = (r.content || '').slice(0, 200);
+      const hl = (highlightTopics || []).map(t => t.toLowerCase());
+      return `<div class="card card-interactive" style="margin-bottom:8px;padding:12px;cursor:pointer" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span class="type-badge ${type}">${type}</span>
+          <span style="font-size:10px;color:var(--ink-faint);font-style:italic">${date}</span>
+        </div>
+        <div style="font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--ink-secondary)">${content}${(r.content || '').length > 200 ? '...' : ''}</div>
+        <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+          ${topics.map(t => '<span class="topic-tag" style="font-size:10px;' + (hl.includes(t.toLowerCase()) ? 'background:var(--accent-wash-strong);color:var(--accent);font-weight:600' : '') + '">' + t + '</span>').join('')}
+          ${people.map(p => '<span style="font-size:10px;color:var(--type-question);background:rgba(122,107,171,0.1);padding:1px 6px;border-radius:10px">' + p + '</span>').join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
 
   sim.on('tick', () => {
+    // Keep nodes within bounds
+    nodes.forEach(d => {
+      d.x = Math.max(d.r + 5, Math.min(width - d.r - 5, d.x));
+      d.y = Math.max(d.r + 5, Math.min(height - d.r - 5, d.y));
+    });
     link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
     node.attr('transform', d => `translate(${d.x},${d.y})`);
   });
