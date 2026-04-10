@@ -432,8 +432,10 @@ body {
 /* Insights */
 .signal-pills {
   display:flex; gap:6px; overflow-x:auto; padding-bottom:8px;
-  margin-bottom:16px;
+  margin-bottom:16px; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.signal-pills::-webkit-scrollbar { display:none; }
 .signal-pill {
   display:flex; align-items:center; gap:5px;
   padding:7px 14px; border-radius:var(--radius-pill);
@@ -636,6 +638,165 @@ body {
   display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;
   padding-top:12px; border-top:1px solid var(--border-light);
 }
+
+/* ── Ask Screen ── */
+.ask-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.ask-textarea {
+  width: 100%;
+  min-height: 100px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink-primary);
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  line-height: 1.5;
+  box-shadow: var(--shadow-sm);
+}
+.ask-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139,107,61,0.12);
+}
+.ask-textarea::placeholder { color: var(--ink-faint); font-style: italic; }
+.ask-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 20px;
+}
+.ask-btn:hover { background: #7a5c34; box-shadow: var(--shadow-lg); }
+.ask-btn:active { transform: scale(0.98); }
+.ask-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.ask-examples {
+  margin-bottom: 20px;
+}
+.ask-examples-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+.ask-example-pill {
+  display: inline-block;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  margin: 0 6px 6px 0;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ask-example-pill:hover { border-color: var(--accent); background: var(--accent-wash); color: var(--ink-primary); }
+
+.ask-result {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+.ask-result.show { display: flex; }
+
+.ask-intent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 2px;
+}
+.ask-intent-badge.abstract { background: rgba(122,107,171,0.12); color: #7a6bab; border: 1px solid rgba(122,107,171,0.3); }
+.ask-intent-badge.graph    { background: rgba(90,127,160,0.12);  color: #5a7fa0; border: 1px solid rgba(90,127,160,0.3);  }
+.ask-intent-badge.specific { background: rgba(139,107,61,0.12);  color: var(--accent); border: 1px solid rgba(139,107,61,0.3); }
+
+.ask-answer {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-primary);
+  padding: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.ask-sources {
+  background: var(--bg-page-alt);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.ask-sources-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.ask-sources-toggle svg { transition: transform 0.2s; }
+.ask-sources-toggle.open svg { transform: rotate(180deg); }
+.ask-sources-body { display: none; padding: 0 16px 12px; }
+.ask-sources-body.open { display: block; }
+.ask-source-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 12px;
+}
+.ask-source-item:last-child { border-bottom: none; }
+.ask-source-type { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+.ask-source-name { color: var(--ink-secondary); margin-top: 2px; font-family: var(--serif); font-size: 13px; }
+.ask-source-score { font-size: 10px; color: var(--ink-faint); }
+
+.ask-offline {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--ink-muted);
+}
+.ask-offline-icon { font-size: 36px; margin-bottom: 12px; }
+.ask-offline-title { font-family: var(--serif); font-size: 17px; font-weight: 500; color: var(--ink-secondary); margin-bottom: 8px; }
+.ask-offline-sub { font-size: 13px; line-height: 1.6; font-style: italic; }
+.ask-offline-phases { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; text-align: left; }
+.ask-offline-phase { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.ask-offline-phase-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ask-spinning { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -768,6 +929,79 @@ body {
     <div class="timeline" id="timeline"></div>
   </div>
 
+  <!-- Ask Second Brain -->
+  <div class="screen" id="askScreen">
+    <div class="section-title" style="margin-bottom:6px">Ask your Second Brain</div>
+    <div style="font-size:13px;color:var(--ink-muted);margin-bottom:18px;font-style:italic">148,599 messages · 735 sessions · vector + graph reasoning</div>
+
+    <div id="askOfflineState">
+      <div class="ask-offline">
+        <div class="ask-offline-icon">🧠</div>
+        <div class="ask-offline-title">Pipeline building…</div>
+        <div class="ask-offline-sub">The Second Brain query endpoint will be online once all phases complete. Capture and search work now.</div>
+        <div class="ask-offline-phases">
+          <div class="ask-offline-phase">
+            <div class="ask-offline-phase-dot" style="background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.5)"></div>
+            <span><strong>Phase 0</strong> — Entity resolution (running now)</span>
+          </div>
+          <div class="ask-offline-phase">
+            <div class="ask-offline-phase-dot" style="background:var(--border)"></div>
+            <span><strong>Phase 1</strong> — Vector embeddings (~$0.24, 3–4 hrs)</span>
+          </div>
+          <div class="ask-offline-phase">
+            <div class="ask-offline-phase-dot" style="background:var(--border)"></div>
+            <span><strong>Phase 2</strong> — Cross-encoder reranker</span>
+          </div>
+          <div class="ask-offline-phase">
+            <div class="ask-offline-phase-dot" style="background:var(--border)"></div>
+            <span><strong>Phase 3</strong> — Knowledge graph + communities</span>
+          </div>
+          <div class="ask-offline-phase">
+            <div class="ask-offline-phase-dot" style="background:var(--border)"></div>
+            <span><strong>Phase 4</strong> — Query agent endpoint (final step)</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius)">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px">Query endpoint URL</div>
+        <input id="brainQueryUrl" type="url" placeholder="https://your-endpoint/ask" style="width:100%;background:var(--bg-page-alt);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-family:var(--sans);font-size:13px;color:var(--ink-primary);outline:none;margin-bottom:8px">
+        <button onclick="saveBrainQueryUrl()" style="width:100%;padding:9px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">Save &amp; Enable Ask</button>
+      </div>
+    </div>
+
+    <div id="askActiveState" style="display:none">
+      <div class="ask-input-wrap">
+        <textarea class="ask-textarea" id="askInput" placeholder="What are my main technical projects?&#10;What did we decide about the RLS bug?&#10;How has my thinking on X evolved?" rows="3"></textarea>
+      </div>
+      <button class="ask-btn" id="askBtn" onclick="askBrain()">Ask Second Brain</button>
+
+      <div class="ask-examples">
+        <div class="ask-examples-label">Try asking</div>
+        <span class="ask-example-pill" onclick="setAskExample(this)">What are my main technical projects?</span>
+        <span class="ask-example-pill" onclick="setAskExample(this)">What recurring themes appear in my work?</span>
+        <span class="ask-example-pill" onclick="setAskExample(this)">What did we decide about the RLS bug?</span>
+        <span class="ask-example-pill" onclick="setAskExample(this)">How is Injector Control related to Open Brain?</span>
+        <span class="ask-example-pill" onclick="setAskExample(this)">What sessions involve both FastAPI and Supabase?</span>
+        <span class="ask-example-pill" onclick="setAskExample(this)">What open questions have I not resolved?</span>
+      </div>
+
+      <div class="ask-result" id="askResult">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="ask-intent-badge" id="askIntentBadge">specific</span>
+          <span style="font-size:11px;color:var(--ink-faint)" id="askTimingLabel"></span>
+        </div>
+        <div class="ask-answer" id="askAnswer"></div>
+        <div class="ask-sources" id="askSourcesCard" style="display:none">
+          <button class="ask-sources-toggle" id="askSourcesToggle" onclick="toggleAskSources()">
+            <span id="askSourcesLabel">Sources</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ask-sources-body" id="askSourcesBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Insights -->
   <div class="screen" id="insightsScreen">
     <div class="section-title" style="margin-bottom:16px">Insights</div>
@@ -794,6 +1028,10 @@ body {
   <button class="nav-item" data-tab="recent">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span>Recent</span>
+  </button>
+  <button class="nav-item" data-tab="ask">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Ask</span>
   </button>
   <button class="nav-item" data-tab="insights">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -941,6 +1179,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     if (tab === 'dashboard') loadDashboard();
     if (tab === 'recent') loadRecent();
     if (tab === 'insights') loadInsights();
+    if (tab === 'ask') initAskScreen();
   });
 });
 
@@ -1235,6 +1474,11 @@ const signals = [
   { id: 'network', label: 'Network', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>' },
   { id: 'resonance', label: 'Resonance', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h2l3-9 4 18 4-18 3 9h4"/></svg>' },
   { id: 'bridges', label: 'People', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+  { id: 'profiles', label: 'Profiles', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id: 'types', label: 'Types', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
+  { id: 'actions', label: 'Actions', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' },
+  { id: 'reasoning', label: 'Reasoning', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+  { id: 'crosscut', label: 'Cross-cut', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>' },
   { id: 'timeline', label: 'Timeline', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
   { id: 'clusters', label: 'Clusters', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>' },
 ];
@@ -1274,6 +1518,20 @@ async function loadSignal(signal) {
     } else if (signal === 'clusters') {
       const data = await api('/api/analyze/clusters');
       renderClusters(data, container);
+    } else if (signal === 'profiles') {
+      const [stats, people] = await Promise.all([api('/api/stats'), api('/api/analyze/people')]);
+      await renderProfiles(stats, people, container);
+    } else if (signal === 'types') {
+      const stats = await api('/api/stats');
+      renderTypeExplorer(stats, container);
+    } else if (signal === 'actions') {
+      renderActionTracker(container);
+    } else if (signal === 'reasoning') {
+      const [stats, topics, clusters] = await Promise.all([api('/api/stats'), api('/api/analyze/topics'), api('/api/analyze/clusters')]);
+      renderReasoning(stats, topics, clusters, container);
+    } else if (signal === 'crosscut') {
+      const [stats, clusters] = await Promise.all([api('/api/stats'), api('/api/analyze/clusters')]);
+      renderCrosscut(stats, clusters, container);
     } else {
       container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>Coming soon</p></div>`;
     }
@@ -1321,18 +1579,25 @@ function renderNetwork(data, container) {
   // Sort pairs by strength for the detail panel
   const sortedPairs = [...pairs].sort((a, b) => (b.co_occurrences || 0) - (a.co_occurrences || 0));
 
-  const width = Math.min(600, window.innerWidth - 32);
-  const height = 400;
+  const isWide = window.innerWidth >= 640;
+  const detailW = isWide ? 260 : 0;
+  const graphW = isWide ? Math.min(600, window.innerWidth - 32 - detailW - 12) : Math.min(600, window.innerWidth - 32);
+  const width = graphW;
+  const height = 420;
 
   container.innerHTML = `
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--ink-faint);font-weight:500;line-height:24px">TAP A TOPIC TO EXPLORE · DRAG TO REARRANGE</span>
     </div>
-    <div class="graph-container" style="height:${height}px;position:relative">
-      <svg id="networkSvg"></svg>
-      <div id="networkTooltip" style="display:none;position:absolute;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:var(--shadow-md);pointer-events:none;z-index:10;max-width:220px;font-size:12px"></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;position:relative">
+      <div style="flex:1;min-width:0">
+        <div class="graph-container" style="height:${height}px;position:relative">
+          <svg id="networkSvg"></svg>
+          <div id="networkTooltip" style="display:none;position:absolute;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:var(--shadow-md);pointer-events:none;z-index:10;max-width:220px;font-size:12px"></div>
+        </div>
+      </div>
+      <div id="networkDetail" style="${isWide ? 'width:' + detailW + 'px;max-height:' + height + 'px;overflow-y:auto;flex-shrink:0' : 'position:fixed;bottom:68px;left:0;right:0;max-height:55vh;overflow-y:auto;z-index:50;background:var(--bg-page);border-top:1px solid var(--border);box-shadow:0 -4px 20px rgba(0,0,0,0.1);padding:0 16px 16px;display:none;border-radius:16px 16px 0 0'};scrollbar-width:thin"></div>
     </div>
-    <div id="networkDetail" style="margin-top:12px"></div>
     <div class="insight-stats" style="margin-top:12px">
       <div class="card"><div class="stat-label">Topics</div><div class="insight-stat-number">${nodes.length}</div></div>
       <div class="card"><div class="stat-label">Connections</div><div class="insight-stat-number">${links.length}</div></div>
@@ -1430,16 +1695,11 @@ function renderNetwork(data, container) {
     tooltip.style.display = 'none';
   });
 
-  // Click node to select/deselect and fetch thoughts
-  node.on('click', function(e, d) {
-    e.stopPropagation();
-    if (selectedNode === d.id) {
-      selectedNode = null;
-      clearHighlight();
-      detailPanel.innerHTML = '';
+      hideDetailPanel();
     } else {
       selectedNode = d.id;
       applyHighlight();
+      showDetailPanel();
       showNodeDetail(d);
       fetchTopicThoughts(d.id);
     }
@@ -1450,16 +1710,7 @@ function renderNetwork(data, container) {
     e.stopPropagation();
     selectedNode = null;
     clearHighlight();
-    const sId = typeof d.source === 'object' ? d.source.id : d.source;
-    const tId = typeof d.target === 'object' ? d.target.id : d.target;
-    fetchConnectionThoughts(sId, tId, d.value);
-  });
-
-  // Click background to deselect
-  svg.on('click', () => {
-    selectedNode = null;
-    clearHighlight();
-    detailPanel.innerHTML = '';
+    hideDetailPanel();
   });
 
   function applyHighlight() {
@@ -1493,30 +1744,39 @@ function renderNetwork(data, container) {
       .attr('stroke-opacity', d => 0.25 + (d.value / maxLinkVal) * 0.5);
   }
 
+  function closeNetworkDetail() {
+    selectedNode = null;
+    clearHighlight();
+    hideDetailPanel();
+  }
+
+  // Expose globally for onclick in HTML
+  window._closeNetworkDetail = closeNetworkDetail;
+
   function showNodeDetail(d) {
     const conns = (topicConnections[d.id] || []).sort((a, b) => b.strength - a.strength);
     const totalStrength = conns.reduce((s, c) => s + c.strength, 0);
-    detailPanel.innerHTML = `<div class="card" style="border-left:3px solid var(--accent)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-family:var(--serif);font-size:18px;font-weight:500;text-transform:capitalize;color:var(--ink-primary)">${d.id}</span>
-        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer" onclick="document.getElementById('networkDetail').innerHTML=''">✕ close</span>
+    detailPanel.innerHTML = `<div class="card" style="border-left:3px solid var(--accent);padding:${isWide ? '10px 12px' : '14px'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-family:var(--serif);font-size:${isWide ? '15px' : '18px'};font-weight:500;text-transform:capitalize;color:var(--ink-primary)">${d.id}</span>
+        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer;padding:4px" onclick="window._closeNetworkDetail()">✕</span>
       </div>
-      <div style="display:flex;gap:16px;margin-bottom:12px">
-        <div><span style="font-size:22px;font-weight:600;color:var(--accent);font-family:var(--serif)">${d.connections}</span><div style="font-size:10px;color:var(--ink-faint);text-transform:uppercase">connections</div></div>
-        <div><span style="font-size:22px;font-weight:600;color:var(--accent);font-family:var(--serif)">${totalStrength}</span><div style="font-size:10px;color:var(--ink-faint);text-transform:uppercase">co-occurrences</div></div>
+      <div style="display:flex;gap:${isWide ? '10px' : '16px'};margin-bottom:10px">
+        <div><span style="font-size:${isWide ? '17px' : '22px'};font-weight:600;color:var(--accent);font-family:var(--serif)">${d.connections}</span><div style="font-size:9px;color:var(--ink-faint);text-transform:uppercase">connections</div></div>
+        <div><span style="font-size:${isWide ? '17px' : '22px'};font-weight:600;color:var(--accent);font-family:var(--serif)">${totalStrength}</span><div style="font-size:9px;color:var(--ink-faint);text-transform:uppercase">co-occurrences</div></div>
       </div>
-      <div class="section-label">Connected Topics</div>
-      ${conns.map(c => {
+      <div class="section-label" style="font-size:10px">Connected Topics</div>
+      ${conns.slice(0, isWide ? 6 : conns.length).map(c => {
         const pct = Math.min(100, (c.strength / (conns[0]?.strength || 1)) * 100);
-        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-family:var(--serif);font-size:13px;color:var(--ink-secondary);min-width:90px;text-transform:capitalize">${c.topic}</span>
-          <div style="flex:1;height:5px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px"></div>
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-family:var(--serif);font-size:${isWide ? '11px' : '13px'};color:var(--ink-secondary);min-width:${isWide ? '70px' : '90px'};text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.topic}</span>
+          <div style="flex:1;height:4px;background:var(--bg-page-alt);border-radius:2px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px"></div>
           </div>
-          <span style="font-size:11px;color:var(--ink-faint);min-width:28px;text-align:right">${c.strength}×</span>
+          <span style="font-size:10px;color:var(--ink-faint);min-width:24px;text-align:right">${c.strength}×</span>
         </div>`;
       }).join('')}
-      <div id="topicThoughts" style="margin-top:14px"><div class="skeleton" style="height:60px"></div></div>
+      <div id="topicThoughts" style="margin-top:10px"><div class="skeleton" style="height:50px"></div></div>
     </div>`;
   }
 
@@ -1556,13 +1816,13 @@ function renderNetwork(data, container) {
   }
 
   async function fetchConnectionThoughts(topicA, topicB, coCount) {
-    detailPanel.innerHTML = `<div class="card" style="border-left:3px solid var(--accent)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-family:var(--serif);font-size:16px;font-weight:500;color:var(--ink-primary);text-transform:capitalize">${topicA} ↔ ${topicB}</span>
-        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer" onclick="document.getElementById('networkDetail').innerHTML=''">✕ close</span>
+    detailPanel.innerHTML = `<div class="card" style="border-left:3px solid var(--accent);padding:${isWide ? '10px 12px' : '14px'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-family:var(--serif);font-size:${isWide ? '13px' : '16px'};font-weight:500;color:var(--ink-primary);text-transform:capitalize">${topicA} ↔ ${topicB}</span>
+        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer;padding:4px" onclick="window._closeNetworkDetail()">✕</span>
       </div>
-      <div style="margin-bottom:12px"><span style="font-size:13px;color:var(--ink-muted)">These topics co-occur in <strong style="color:var(--accent)">${coCount}</strong> thought${coCount !== 1 ? 's' : ''}. Here's what connects them:</span></div>
-      <div id="connectionThoughts"><div class="skeleton" style="height:60px"></div></div>
+      <div style="margin-bottom:10px"><span style="font-size:${isWide ? '11px' : '13px'};color:var(--ink-muted)">Co-occur in <strong style="color:var(--accent)">${coCount}</strong> thought${coCount !== 1 ? 's' : ''}</span></div>
+      <div id="connectionThoughts"><div class="skeleton" style="height:50px"></div></div>
     </div>`;
     const thoughtsEl = document.getElementById('connectionThoughts');
     try {
@@ -1655,75 +1915,563 @@ function renderBridges(data, container) {
     container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No people network data available</p></div>`;
     return;
   }
-  container.innerHTML = `<div class="card"><div class="section-label">People Network</div>
-    ${pairs.slice(0, 10).map(p => {
-      const sharedTopics = (p.shared_topics || []).slice(0, 3);
-      return `<div class="pattern-item">
-        <div class="pattern-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <div style="flex:1">
-          <div class="pattern-text">${p.person_a} &amp; ${p.person_b}</div>
-          <div class="pattern-sub">${p.shared_thoughts || 0} shared thought${(p.shared_thoughts || 0) !== 1 ? 's' : ''}${sharedTopics.length ? ' · ' + sharedTopics.join(', ') : ''}</div>
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`;
-}
+  // Extract all unique people and their total connections
+  const personStats = {};
+  pairs.forEach(p => {
+    if (!personStats[p.person_a]) personStats[p.person_a] = { connections: 0, totalShared: 0, allTopics: new Set() };
+    if (!personStats[p.person_b]) personStats[p.person_b] = { connections: 0, totalShared: 0, allTopics: new Set() };
+    personStats[p.person_a].connections++;
+    personStats[p.person_b].connections++;
+    personStats[p.person_a].totalShared += (p.shared_thoughts || 0);
+    personStats[p.person_b].totalShared += (p.shared_thoughts || 0);
+    (p.shared_topics || []).forEach(t => { personStats[p.person_a].allTopics.add(t); personStats[p.person_b].allTopics.add(t); });
+  });
+  const uniquePeople = Object.entries(personStats).sort((a,b) => b[1].totalShared - a[1].totalShared);
 
-function renderTimeline(data, container) {
-  // API returns: { timeline: [{ period, thought_count, top_topics }] }
-  const entries = data.timeline || [];
-  if (!entries.length) {
-    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No timeline data available</p></div>`;
-    return;
-  }
-  const maxVal = Math.max(...entries.map(x => x.thought_count || 0), 1);
-  container.innerHTML = `<div class="card"><div class="section-label">Activity Over Time</div>
-    <div style="padding:8px 0">${entries.slice(0, 14).map(e => {
-      const label = e.period || '';
-      const count = e.thought_count || 0;
-      const pct = maxVal > 0 ? (count / maxVal) * 100 : 0;
-      const topics = (e.top_topics || []).slice(0, 3);
-      return `<div style="margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:12px;color:var(--ink-muted);min-width:80px;font-weight:500">${label}</span>
-          <div style="flex:1;height:6px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;transition:width 0.5s"></div>
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-label">People Overview</div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:10px"><strong style="color:var(--accent)">${uniquePeople.length}</strong> people with connections in the network</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+        ${uniquePeople.map(([name, s]) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-pill);background:var(--accent-wash);border:1px solid var(--border-light);font-size:11px;cursor:pointer" onclick="loadPersonProfile('${name.replace(/'/g, "\\'")}')"><span style="font-family:var(--serif);color:var(--ink-primary)">${name}</span><span style="color:var(--accent);font-weight:600">${s.connections}</span></span>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label">Relationships</div>
+      ${pairs.slice(0, 15).map(p => {
+        const sharedTopics = (p.shared_topics || []).slice(0, 3);
+        return `<div class="pattern-item">
+          <div class="pattern-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div style="flex:1">
+            <div class="pattern-text">${p.person_a} &amp; ${p.person_b}</div>
+            <div class="pattern-sub">${p.shared_thoughts || 0} shared thought${(p.shared_thoughts || 0) !== 1 ? 's' : ''}${sharedTopics.length ? ' · ' + sharedTopics.join(', ') : ''}</div>
           </div>
-          <span style="font-size:11px;color:var(--ink-faint);min-width:24px;text-align:right">${count}</span>
-        </div>
-        ${topics.length ? `<div style="margin-left:90px;display:flex;gap:4px;flex-wrap:wrap">${topics.map(t => `<span class="topic-tag" style="font-size:10px">${t}</span>`).join('')}</div>` : ''}
-      </div>`;
-    }).join('')}</div>
-  </div>`;
+        </div>`;
+      }).join('')}
+    </div>
+    <div id="personProfile"></div>`;
 }
 
-function renderClusters(data, container) {
-  // API returns: { clusters: [{ primary_topic, thought_count, related_topics, types: {idea: N, ...}, date_range: {earliest, latest} }] }
-  const items = data.clusters || [];
-  if (!items.length) {
-    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No cluster data available</p></div>`;
+// ── People Profiles ──
+async function renderProfiles(stats, peopleData, container) {
+  container.innerHTML = '<div class="skeleton" style="height:200px"></div><div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-top:8px">Discovering all people across your thoughts...</div>';
+  const network = peopleData.people_network || [];
+  const topPeople = stats.top_people || [];
+
+  // Phase 1: Collect all known people from stats + network
+  const peopleCounts = {};
+  topPeople.forEach(p => { const n = p.name || p.person; if (n) peopleCounts[n] = Math.max(peopleCounts[n] || 0, p.count || 0); });
+  network.forEach(p => {
+    if (p.person_a) peopleCounts[p.person_a] = peopleCounts[p.person_a] || 0;
+    if (p.person_b) peopleCounts[p.person_b] = peopleCounts[p.person_b] || 0;
+  });
+
+  // Phase 2: Deep scan — search with each known person's name + broad queries to find more
+  const knownNames = Object.keys(peopleCounts);
+  const searchQueries = [...new Set([...knownNames, 'meeting', 'discussed with', 'told', 'asked', 'call with', 'email from'])];
+  const allResults = [];
+  const seen = new Set();
+  // Run searches in batches of 4
+  for (let i = 0; i < Math.min(searchQueries.length, 16); i += 4) {
+    const batch = searchQueries.slice(i, i + 4);
+    const batchResults = await Promise.all(batch.map(q => api('/api/search?q=' + encodeURIComponent(q) + '&limit=15').catch(() => ({ results: [] }))));
+    batchResults.forEach(d => (d.results || []).forEach(r => { if (!seen.has(r.id)) { seen.add(r.id); allResults.push(r); } }));
+  }
+
+  // Phase 3: Extract ALL people from search results
+  allResults.forEach(r => {
+    (r.people || []).forEach(name => {
+      peopleCounts[name] = (peopleCounts[name] || 0) + 1;
+    });
+  });
+
+  // Build person → topics and person → connections maps
+  const personTopics = {};
+  const personConnections = {};
+  const personTypes = {};
+  network.forEach(p => {
+    if (!personTopics[p.person_a]) personTopics[p.person_a] = new Set();
+    if (!personTopics[p.person_b]) personTopics[p.person_b] = new Set();
+    (p.shared_topics || []).forEach(t => { personTopics[p.person_a].add(t); personTopics[p.person_b].add(t); });
+    if (!personConnections[p.person_a]) personConnections[p.person_a] = [];
+    if (!personConnections[p.person_b]) personConnections[p.person_b] = [];
+    personConnections[p.person_a].push({ name: p.person_b, shared: p.shared_thoughts || 0 });
+    personConnections[p.person_b].push({ name: p.person_a, shared: p.shared_thoughts || 0 });
+  });
+  // Also build topics + types from search results
+  allResults.forEach(r => {
+    (r.people || []).forEach(name => {
+      if (!personTopics[name]) personTopics[name] = new Set();
+      (r.topics || []).forEach(t => personTopics[name].add(t));
+      if (!personTypes[name]) personTypes[name] = {};
+      const tp = r.type || 'untyped';
+      personTypes[name][tp] = (personTypes[name][tp] || 0) + 1;
+    });
+  });
+
+  const allPeople = Object.entries(peopleCounts).sort((a, b) => b[1] - a[1]);
+  const maxCount = Math.max(...allPeople.map(([,c]) => c), 1);
+
+  if (!allPeople.length) {
+    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No people found in your thoughts</p></div>`;
     return;
   }
-  container.innerHTML = `<div class="card"><div class="section-label">Thought Clusters</div>
-    ${items.slice(0, 8).map(c => {
-      const name = c.primary_topic || 'Unnamed';
-      const count = c.thought_count || 0;
-      const related = (c.related_topics || []).slice(0, 4);
-      const types = c.types ? Object.entries(c.types).filter(([k,v]) => v > 0 && k !== 'null' && k !== 'untyped').sort((a,b) => b[1] - a[1]).slice(0, 3) : [];
-      return `<div class="pattern-item" style="flex-wrap:wrap">
-        <div class="pattern-icon" style="border-radius:var(--radius-sm)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></div>
-        <div style="flex:1;min-width:0">
-          <div class="pattern-text" style="text-transform:capitalize">${name}</div>
-          <div class="pattern-sub">${count} thought${count !== 1 ? 's' : ''}${types.length ? ' · ' + types.map(([t,n]) => t + ': ' + n).join(', ') : ''}</div>
-          ${related.length ? `<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">${related.map(r => `<span class="topic-tag" style="font-size:10px">${r}</span>`).join('')}</div>` : ''}
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`;
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-label">Everyone in Your Brain</div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:12px"><strong style="color:var(--accent)">${allPeople.length}</strong> people found across ${stats.total_thoughts || 0} thoughts. Tap anyone to explore.</div>
+      ${allPeople.map(([name, count]) => {
+        const pct = (count / maxCount) * 100;
+        const topics = [...(personTopics[name] || [])].slice(0, 4);
+        const conns = (personConnections[name] || []).sort((a,b) => b.shared - a.shared).slice(0, 3);
+        const types = personTypes[name] || {};
+        const typeStr = Object.entries(types).sort((a,b) => b[1] - a[1]).slice(0, 3).map(([t,n]) => t).join(', ');
+        return `<div class="card card-interactive" style="margin-bottom:8px;padding:12px;cursor:pointer" onclick="loadPersonProfile('${name.replace(/'/g, "\\'")}')">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-wash-strong);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--accent);font-weight:600">${name.charAt(0).toUpperCase()}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:var(--serif);font-size:15px;color:var(--ink-primary);font-weight:500">${name}</div>
+              <div style="font-size:11px;color:var(--ink-faint)">${count} mention${count !== 1 ? 's' : ''}${conns.length ? ' · knows ' + conns.map(c=>c.name).join(', ') : ''}${typeStr ? ' · ' + typeStr : ''}</div>
+            </div>
+            <span style="font-size:10px;color:var(--ink-faint)">→</span>
+          </div>
+          <div style="height:4px;background:var(--bg-page-alt);border-radius:2px;overflow:hidden;margin-bottom:6px"><div style="width:${pct}%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+          ${topics.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap">${topics.map(t => '<span class="topic-tag" style="font-size:10px">' + t + '</span>').join('')}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div id="personProfile"></div>`;
 }
 
-// ── Enter key on connect ──
-document.getElementById('keyInput').addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
-</script>
-</body>
-</html>
+async function loadPersonProfile(name) {
+  const profileEl = document.getElementById('personProfile');
+  if (!profileEl) return;
+  profileEl.innerHTML = '<div class="skeleton" style="height:100px"></div>';
+  try {
+    const data = await api('/api/search?q=' + encodeURIComponent(name) + '&limit=20');
+    const results = (data.results || []).filter(r => (r.people || []).some(p => p.toLowerCase() === name.toLowerCase()));
+    // Analyze by type
+    const byType = {};
+    const allTopics = {};
+    results.forEach(r => {
+      const t = r.type || 'untyped';
+      byType[t] = (byType[t] || 0) + 1;
+      (r.topics || []).forEach(tp => { allTopics[tp] = (allTopics[tp] || 0) + 1; });
+    });
+    const typeEntries = Object.entries(byType).sort((a,b) => b[1] - a[1]);
+    const topicEntries = Object.entries(allTopics).sort((a,b) => b[1] - a[1]).slice(0, 8);
+
+    profileEl.innerHTML = `<div class="card" style="border-left:3px solid var(--accent)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-wash-strong);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:18px;color:var(--accent);font-weight:600">${name.charAt(0).toUpperCase()}</div>
+          <div>
+            <div style="font-family:var(--serif);font-size:18px;font-weight:500;color:var(--ink-primary)">${name}</div>
+            <div style="font-size:11px;color:var(--ink-faint)">${results.length} thought${results.length !== 1 ? 's' : ''} found</div>
+          </div>
+        </div>
+        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer" onclick="document.getElementById('personProfile').innerHTML=''">✕ close</span>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        ${typeEntries.map(([t,n]) => `<div style="text-align:center"><span style="font-size:18px;font-weight:600;color:var(--type-${t});font-family:var(--serif)">${n}</span><div style="font-size:10px;color:var(--ink-faint);text-transform:uppercase">${t}${n!==1?'s':''}</div></div>`).join('')}
+      </div>
+      <div class="section-label">Topics Connected to ${name}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">${topicEntries.map(([t,n]) => `<span class="topic-tag" style="font-size:11px">${t} <strong style="color:var(--accent)">${n}</strong></span>`).join('')}</div>
+      <div class="section-label">Recent Thoughts</div>
+      ${results.slice(0, 6).map(r => {
+        const type = r.type || 'untyped';
+        const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+        const content = (r.content || '').slice(0, 180);
+        return `<div class="card card-interactive" style="margin-bottom:6px;padding:10px;cursor:pointer" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="type-badge ${type}">${type}</span><span style="font-size:10px;color:var(--ink-faint)">${date}</span></div>
+          <div style="font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--ink-secondary)">${content}${(r.content||'').length > 180 ? '...' : ''}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } catch(e) {
+    profileEl.innerHTML = `<div class="card" style="color:var(--type-observation)">Failed to load profile: ${e.message}</div>`;
+  }
+}
+
+// ── Type Explorer ──
+function renderTypeExplorer(stats, container) {
+  const types = stats.counts_by_type || {};
+  const typeList = Object.entries(types).filter(([k,v]) => k !== 'null' && v > 0).sort((a,b) => b[1] - a[1]);
+  const total = Object.values(types).reduce((s,v) => s + v, 0);
+  const typeColors = { idea: 'var(--type-idea)', question: 'var(--type-question)', task: 'var(--type-task)', reference: 'var(--type-reference)', observation: 'var(--type-observation)', decision: 'var(--type-decision)', untyped: 'var(--type-untyped)', null: 'var(--ink-faint)' };
+  const typeDescriptions = {
+    idea: 'Creative sparks and hypotheses',
+    question: 'Open inquiries and unknowns',
+    task: 'Things to do or delegate',
+    reference: 'External knowledge stored',
+    observation: 'Things noticed and recorded',
+    decision: 'Choices made and committed to',
+    untyped: 'Thoughts awaiting classification'
+  };
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-label">Thought Type Distribution</div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:14px">${total} total thoughts. Tap a type to explore all thoughts of that kind.</div>
+      ${typeList.map(([type, count]) => {
+        const pct = ((count / total) * 100).toFixed(1);
+        const color = typeColors[type] || 'var(--ink-faint)';
+        const desc = typeDescriptions[type] || '';
+        return `<div class="card card-interactive" style="margin-bottom:8px;padding:12px;cursor:pointer" onclick="loadTypeThoughts('${type}')">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span class="type-badge ${type}" style="min-width:80px;text-align:center">${type}</span>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+                <span style="font-size:12px;color:var(--ink-muted)">${desc}</span>
+                <span style="font-size:12px;font-weight:600;color:${color}">${count} (${pct}%)</span>
+              </div>
+              <div style="height:5px;background:var(--bg-page-alt);border-radius:3px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div id="typeThoughts"></div>`;
+}
+
+async function loadTypeThoughts(type) {
+  const el = document.getElementById('typeThoughts');
+  if (!el) return;
+  el.innerHTML = '<div class="skeleton" style="height:100px"></div>';
+  try {
+    // Search broadly and filter by type
+    const data = await api('/api/search?q=' + encodeURIComponent(type) + '&limit=30');
+    let results = (data.results || []).filter(r => (r.type || 'untyped') === type);
+    // If no exact matches from search, try without filter
+    if (!results.length) {
+      results = (data.results || []).slice(0, 10);
+    }
+    const topicsInType = {};
+    results.forEach(r => (r.topics || []).forEach(t => { topicsInType[t] = (topicsInType[t] || 0) + 1; }));
+    const topTopics = Object.entries(topicsInType).sort((a,b) => b[1] - a[1]).slice(0, 8);
+
+    el.innerHTML = `<div class="card" style="border-left:3px solid var(--type-${type})">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><span class="type-badge ${type}" style="font-size:14px;padding:4px 12px">${type}</span><span style="font-size:12px;color:var(--ink-faint);margin-left:8px">${results.length} found</span></div>
+        <span style="font-size:11px;color:var(--ink-faint);cursor:pointer" onclick="document.getElementById('typeThoughts').innerHTML=''">✕ close</span>
+      </div>
+      ${topTopics.length ? `<div class="section-label">Common Topics in ${type}s</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">${topTopics.map(([t,n]) => `<span class="topic-tag" style="font-size:11px">${t} <strong style="color:var(--accent)">${n}</strong></span>`).join('')}</div>` : ''}
+      <div class="section-label">${type === 'question' ? 'Your Open Questions' : type === 'decision' ? 'Your Decision Log' : type === 'task' ? 'Your Tasks' : 'Thoughts'}</div>
+      ${results.slice(0, 8).map(r => {
+        const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+        const content = (r.content || '').slice(0, 200);
+        const topics = (r.topics || []).slice(0, 3);
+        const people = (r.people || []).slice(0, 2);
+        const actions = r.action_items || [];
+        return `<div class="card card-interactive" style="margin-bottom:6px;padding:10px;cursor:pointer" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:10px;color:var(--ink-faint)">${date}</span></div>
+          <div style="font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--ink-secondary)">${content}${(r.content||'').length > 200 ? '...' : ''}</div>
+          ${actions.length ? `<div style="margin-top:4px">${actions.slice(0,2).map(a => `<div style="font-size:11px;color:var(--type-task);display:flex;gap:4px;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${a}</div>`).join('')}</div>` : ''}
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+            ${topics.map(t => '<span class="topic-tag" style="font-size:10px">' + t + '</span>').join('')}
+            ${people.map(p => '<span style="font-size:10px;color:var(--type-question);background:rgba(122,107,171,0.1);padding:1px 6px;border-radius:10px">' + p + '</span>').join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="card" style="color:var(--type-observation)">Failed to load: ${e.message}</div>`;
+  }
+}
+
+// ── Action Items Tracker ──
+async function renderActionTracker(container) {
+  container.innerHTML = '<div class="skeleton" style="height:200px"></div>';
+  try {
+    // Search for tasks and action items across multiple queries
+    const [taskData, actionData] = await Promise.all([
+      api('/api/search?q=task&limit=20'),
+      api('/api/search?q=action+item&limit=20')
+    ]);
+    const allResults = [...(taskData.results || []), ...(actionData.results || [])];
+    // Deduplicate by id
+    const seen = new Set();
+    const unique = allResults.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+    // Extract action items
+    const withActions = unique.filter(r => (r.action_items || []).length > 0);
+    const tasks = unique.filter(r => r.type === 'task');
+    // All action items flattened with parent context
+    const actionItems = [];
+    withActions.forEach(r => {
+      (r.action_items || []).forEach(a => {
+        actionItems.push({ action: a, thought: r });
+      });
+    });
+
+    const totalActions = actionItems.length;
+    const totalTasks = tasks.length;
+    const byTopic = {};
+    [...withActions, ...tasks].forEach(r => (r.topics || []).forEach(t => { byTopic[t] = (byTopic[t] || 0) + 1; }));
+    const topTopics = Object.entries(byTopic).sort((a,b) => b[1] - a[1]).slice(0, 6);
+
+    container.innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-label">Action Overview</div>
+        <div class="insight-stats" style="margin-bottom:12px">
+          <div class="card"><div class="stat-label">Action Items</div><div class="insight-stat-number">${totalActions}</div></div>
+          <div class="card"><div class="stat-label">Tasks</div><div class="insight-stat-number">${totalTasks}</div></div>
+        </div>
+        ${topTopics.length ? `<div style="font-size:11px;color:var(--ink-faint);margin-bottom:6px">Most action-heavy topics:</div><div style="display:flex;gap:4px;flex-wrap:wrap">${topTopics.map(([t,n]) => `<span class="topic-tag" style="font-size:10px">${t} (${n})</span>`).join('')}</div>` : ''}
+      </div>
+      ${actionItems.length ? `<div class="card" style="margin-bottom:12px">
+        <div class="section-label">Extracted Action Items</div>
+        ${actionItems.slice(0, 15).map((ai, idx) => {
+          const date = ai.thought.created_at ? new Date(ai.thought.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+          const topics = (ai.thought.topics || []).slice(0, 2);
+          return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);align-items:flex-start">
+            <div style="width:18px;height:18px;border:2px solid var(--accent);border-radius:4px;flex-shrink:0;margin-top:1px"></div>
+            <div style="flex:1">
+              <div style="font-family:var(--serif);font-size:13px;line-height:1.4;color:var(--ink-primary)">${ai.action}</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:3px">
+                <span style="font-size:10px;color:var(--ink-faint)">${date}</span>
+                ${topics.map(t => '<span class="topic-tag" style="font-size:9px">' + t + '</span>').join('')}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+      ${tasks.length ? `<div class="card">
+        <div class="section-label">Task Thoughts</div>
+        ${tasks.slice(0, 8).map(r => {
+          const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) : '';
+          const content = (r.content || '').slice(0, 160);
+          return `<div class="card card-interactive" style="margin-bottom:6px;padding:10px;cursor:pointer" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="type-badge task">task</span><span style="font-size:10px;color:var(--ink-faint)">${date}</span></div>
+            <div style="font-family:var(--serif);font-size:13px;line-height:1.5;color:var(--ink-secondary)">${content}${(r.content||'').length > 160 ? '...' : ''}</div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}`;
+  } catch(e) {
+    container.innerHTML = `<div class="card" style="padding:20px;color:var(--type-observation)">Failed to load actions: ${e.message}</div>`;
+  }
+}
+
+// ── Topic × Type Cross-cut ──
+function renderCrosscut(stats, clusterData, container) {
+  const types = stats.counts_by_type || {};
+  const clusters = clusterData.clusters || [];
+  const typeKeys = Object.keys(types).filter(k => k !== 'null' && k !== 'untyped' && types[k] > 0).sort((a,b) => types[b] - types[a]);
+  const typeColors = { idea: 'var(--type-idea)', question: 'var(--type-question)', task: 'var(--type-task)', reference: 'var(--type-reference)', observation: 'var(--type-observation)', decision: 'var(--type-decision)' };
+
+  if (!clusters.length) {
+    container.innerHTML = `<div class="card" style="padding:40px;text-align:center;color:var(--ink-faint)"><p>No cross-cut data available</p></div>`;
+    return;
+  }
+
+  // Build topic × type matrix from clusters
+  const matrix = clusters.map(c => {
+    const row = { topic: c.primary_topic, total: c.thought_count };
+    typeKeys.forEach(t => { row[t] = (c.types || {})[t] || 0; });
+    return row;
+  }).sort((a,b) => b.total - a.total).slice(0, 12);
+
+  const maxTotal = Math.max(...matrix.map(r => r.total), 1);
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="section-label">Topic × Type Matrix</div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:14px">How your thinking varies by topic — are you asking questions, making decisions, or storing references?</div>
+      <!-- Legend -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        ${typeKeys.map(t => `<div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:2px;background:${typeColors[t] || 'var(--ink-faint)'}"></div><span style="font-size:10px;color:var(--ink-muted);text-transform:capitalize">${t}</span></div>`).join('')}
+      </div>
+      ${matrix.map(row => {
+        return `<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-family:var(--serif);font-size:13px;color:var(--ink-primary);text-transform:capitalize;font-weight:500">${row.topic}</span>
+            <span style="font-size:11px;color:var(--ink-faint)">${row.total} thoughts</span>
+          </div>
+          <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg-page-alt)">
+            ${typeKeys.map(t => {
+              const w = row.total > 0 ? (row[t] / row.total) * 100 : 0;
+              return w > 0 ? `<div style="width:${w}%;height:100%;background:${typeColors[t] || 'var(--ink-faint)'}" title="${t}: ${row[t]}"></div>` : '';
+            }).join('')}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:3px">
+            ${typeKeys.filter(t => row[t] > 0).map(t => `<span style="font-size:10px;color:${typeColors[t] || 'var(--ink-faint)'}">${t}: ${row[t]}</span>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card">
+      <div class="section-label">Insight Patterns</div>
+      ${generateCrosscutInsights(matrix, typeKeys)}
+    </div>`;
+}
+
+function generateCrosscutInsights(matrix, typeKeys) {
+  const insights = [];
+  // Find topics dominated by questions (research mode)
+  const questionHeavy = matrix.filter(r => r.question && r.total > 0 && (r.question / r.total) > 0.3);
+  if (questionHeavy.length) {
+    insights.push(`<div style="padding:8px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--type-question);font-weight:600">Still exploring:</span> <span style="font-family:var(--serif);color:var(--ink-secondary);text-transform:capitalize">${questionHeavy.map(r => r.topic).join(', ')}</span> <span style="color:var(--ink-muted);font-size:12px">— high proportion of questions, suggesting active inquiry</span></div>`);
+  }
+  // Find topics dominated by decisions (resolved)
+  const decisionHeavy = matrix.filter(r => r.decision && r.total > 0 && (r.decision / r.total) > 0.2);
+  if (decisionHeavy.length) {
+    insights.push(`<div style="padding:8px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--type-decision);font-weight:600">Decided on:</span> <span style="font-family:var(--serif);color:var(--ink-secondary);text-transform:capitalize">${decisionHeavy.map(r => r.topic).join(', ')}</span> <span style="color:var(--ink-muted);font-size:12px">— decisions made here</span></div>`);
+  }
+  // Find reference-heavy topics (knowledge bank)
+  const refHeavy = matrix.filter(r => r.reference && r.total > 0 && (r.reference / r.total) > 0.5);
+  if (refHeavy.length) {
+    insights.push(`<div style="padding:8px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--type-reference);font-weight:600">Knowledge bank:</span> <span style="font-family:var(--serif);color:var(--ink-secondary);text-transform:capitalize">${refHeavy.map(r => r.topic).join(', ')}</span> <span style="color:var(--ink-muted);font-size:12px">— mostly stored references</span></div>`);
+  }
+  // Find idea-heavy topics (creative space)
+  const ideaHeavy = matrix.filter(r => r.idea && r.total > 0 && (r.idea / r.total) > 0.25);
+  if (ideaHeavy.length) {
+    insights.push(`<div style="padding:8px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--type-idea);font-weight:600">Creative space:</span> <span style="font-family:var(--serif);color:var(--ink-secondary);text-transform:capitalize">${ideaHeavy.map(r => r.topic).join(', ')}</span> <span style="color:var(--ink-muted);font-size:12px">— rich in ideas and hypotheses</span></div>`);
+  }
+  if (!insights.length) {
+    insights.push(`<div style="padding:8px 0;color:var(--ink-muted);font-size:12px">Your thinking is evenly distributed across types — no single topic is dominated by one mode of thought.</div>`);
+  }
+  return insights.join('');
+}
+
+// ── Reasoning Analysis ──
+async function renderReasoning(stats, topicsData, clusterData, container) {
+  container.innerHTML = '<div class="skeleton" style="height:200px"></div>';
+  try {
+    // Fetch different thought types for reasoning analysis
+    const [questions, decisions, ideas, observations] = await Promise.all([
+      api('/api/search?q=question+why+how&limit=20'),
+      api('/api/search?q=decision+decided+chose&limit=20'),
+      api('/api/search?q=idea+hypothesis+theory+maybe&limit=20'),
+      api('/api/search?q=observation+noticed+pattern&limit=20')
+    ]);
+
+    const qResults = (questions.results || []).filter(r => r.type === 'question');
+    const dResults = (decisions.results || []).filter(r => r.type === 'decision');
+    const iResults = (ideas.results || []).filter(r => r.type === 'idea');
+    const oResults = (observations.results || []).filter(r => r.type === 'observation');
+
+    // Analyze reasoning patterns
+    const types = stats.counts_by_type || {};
+    const totalThoughts = stats.total_thoughts || 0;
+
+    // 1. Reasoning balance: ratio of evidence-gathering vs conclusion-making
+    const evidenceTypes = (types.observation || 0) + (types.reference || 0);
+    const conclusionTypes = (types.decision || 0) + (types.idea || 0);
+    const inquiryTypes = types.question || 0;
+    const evidenceRatio = totalThoughts > 0 ? ((evidenceTypes / totalThoughts) * 100).toFixed(0) : 0;
+    const conclusionRatio = totalThoughts > 0 ? ((conclusionTypes / totalThoughts) * 100).toFixed(0) : 0;
+    const inquiryRatio = totalThoughts > 0 ? ((inquiryTypes / totalThoughts) * 100).toFixed(0) : 0;
+
+    // 2. Find question → decision arcs (same topic in both questions and decisions)
+    const questionTopics = new Set();
+    qResults.forEach(r => (r.topics || []).forEach(t => questionTopics.add(t.toLowerCase())));
+    const decisionTopics = new Set();
+    dResults.forEach(r => (r.topics || []).forEach(t => decisionTopics.add(t.toLowerCase())));
+    const resolvedTopics = [...questionTopics].filter(t => decisionTopics.has(t));
+    const unresolvedTopics = [...questionTopics].filter(t => !decisionTopics.has(t));
+
+    // 3. Unsupported decisions (decisions on topics with no references/observations)
+    const evidenceTopics = new Set();
+    oResults.forEach(r => (r.topics || []).forEach(t => evidenceTopics.add(t.toLowerCase())));
+    const unsupportedDecisions = dResults.filter(r => {
+      const dTopics = (r.topics || []).map(t => t.toLowerCase());
+      return !dTopics.some(t => evidenceTopics.has(t));
+    });
+
+    // 4. Ideas without supporting evidence
+    const unsupportedIdeas = iResults.filter(r => {
+      const iTopics = (r.topics || []).map(t => t.toLowerCase());
+      return !iTopics.some(t => evidenceTopics.has(t));
+    });
+
+    // 5. Reasoning modes
+    const clusters = clusterData.clusters || [];
+    const syntheticThinking = clusters.filter(c => (c.related_topics || []).length >= 3);
+
+    container.innerHTML = `
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-label">How You Think</div>
+        <div style="font-size:12px;color:var(--ink-muted);margin-bottom:14px">Analysis of your reasoning patterns across ${totalThoughts} thoughts</div>
+
+        <!-- Reasoning Balance Meter -->
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Reasoning Balance</div>
+          <div style="display:flex;height:24px;border-radius:12px;overflow:hidden;background:var(--bg-page-alt);margin-bottom:6px">
+            <div style="width:${evidenceRatio}%;background:var(--type-reference);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:600">${evidenceRatio > 8 ? evidenceRatio + '%' : ''}</div>
+            <div style="width:${inquiryRatio}%;background:var(--type-question);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:600">${inquiryRatio > 5 ? inquiryRatio + '%' : ''}</div>
+            <div style="width:${conclusionRatio}%;background:var(--type-idea);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:600">${conclusionRatio > 8 ? conclusionRatio + '%' : ''}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:var(--type-reference)">Evidence gathering (${evidenceTypes})</span>
+            <span style="color:var(--type-question)">Inquiry (${inquiryTypes})</span>
+            <span style="color:var(--type-idea)">Conclusions (${conclusionTypes})</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reasoning Arcs -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-label">Question → Decision Arcs</div>
+        <div style="font-size:12px;color:var(--ink-muted);margin-bottom:10px">Topics where you asked questions AND made decisions — completed reasoning chains</div>
+        ${resolvedTopics.length ? `<div style="margin-bottom:10px">${resolvedTopics.slice(0, 8).map(t =>
+          `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border-light)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--type-task)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span style="font-family:var(--serif);font-size:13px;text-transform:capitalize;color:var(--ink-primary)">${t}</span>
+            <span style="font-size:10px;color:var(--type-task);background:rgba(90,138,106,0.1);padding:1px 8px;border-radius:10px">resolved</span>
+          </div>`).join('')}</div>` : '<div style="font-size:12px;color:var(--ink-faint);font-style:italic;margin-bottom:10px">No completed arcs found yet</div>'}
+        ${unresolvedTopics.length ? `<div style="font-size:11px;color:var(--ink-faint);margin-bottom:6px">Still open (questions without decisions):</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${unresolvedTopics.slice(0, 10).map(t => `<span class="topic-tag" style="font-size:10px;border-color:var(--type-question);color:var(--type-question)">${t}</span>`).join('')}</div>` : ''}
+      </div>
+
+      <!-- Reasoning Risks -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-label">Reasoning Gaps</div>
+        ${unsupportedDecisions.length ? `<div style="margin-bottom:12px">
+          <div style="font-size:12px;color:var(--type-observation);font-weight:500;margin-bottom:6px">⚠ Decisions without observed evidence (${unsupportedDecisions.length})</div>
+          <div style="font-size:11px;color:var(--ink-muted);margin-bottom:8px">These decisions don't have matching observations — they may be intuition-based</div>
+          ${unsupportedDecisions.slice(0, 4).map(r => {
+            const content = (r.content || '').slice(0, 140);
+            return `<div class="card card-interactive" style="margin-bottom:4px;padding:8px;cursor:pointer;border-left:2px solid var(--type-observation)" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+              <div style="font-family:var(--serif);font-size:12px;line-height:1.4;color:var(--ink-secondary)">${content}${(r.content||'').length > 140 ? '...' : ''}</div>
+            </div>`;
+          }).join('')}
+        </div>` : `<div style="padding:6px 0;color:var(--type-task);font-size:12px">✓ All decisions appear to have supporting evidence</div>`}
+        ${unsupportedIdeas.length ? `<div>
+          <div style="font-size:12px;color:var(--type-idea);font-weight:500;margin-bottom:6px">💡 Ideas without observed backing (${unsupportedIdeas.length})</div>
+          <div style="font-size:11px;color:var(--ink-muted);margin-bottom:8px">Creative sparks that haven't been validated by observation yet</div>
+          ${unsupportedIdeas.slice(0, 4).map(r => {
+            const content = (r.content || '').slice(0, 140);
+            return `<div class="card card-interactive" style="margin-bottom:4px;padding:8px;cursor:pointer;border-left:2px solid var(--type-idea)" onclick='showThoughtModal(${JSON.stringify(r).replace(/'/g, "&#39;")})'>
+              <div style="font-family:var(--serif);font-size:12px;line-height:1.4;color:var(--ink-secondary)">${content}${(r.content||'').length > 140 ? '...' : ''}</div>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+      </div>
+
+      <!-- Synthetic Thinking -->
+      <div class="card">
+        <div class="section-label">Thinking Modes</div>
+        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="text-align:center;flex:1;min-width:80px">
+            <div style="font-size:22px;font-weight:600;color:var(--type-reference);font-family:var(--serif)">${evidenceTypes}</div>
+            <div style="font-size:10px;color:var(--ink-faint)">EVIDENCE<br>gathering</div>
+          </div>
+          <div style="text-align:center;flex:1;min-width:80px">
+            <div style="font-size:22px;font-weight:600;color:var(--type-question);font-family:var(--serif)">${inquiryTypes}</div>
+            <div style="font-size:10px;color:var(--ink-faint)">OPEN<br>questions</div>
+          </div>
+          <div style="text-align:center;flex:1;min-width:80px">
+            <div style="font-size:22px;font-weight:600;color:var(--type-idea);font-family:var(--serif)">${iResults.length}</div>
+            <div style="font-size:10px;color:var(--ink-faint)">HYPOTHESES<br>generated</div>
+          </div>
+          <div style="text-align:center;flex:1;min-width:80px">
+            <div style="font-size:22px;font-weight:600;color:var(--type-decision);font-family:var(--serif)">${dResults.length}</div>
+            <div style="font-size:10px;color:var(--ink-faint)">DECISIONS<br>made</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ink-muted);line-height:1.5">
+          ${syntheticThinking.length ? `<strong style="color:var(--accent)">${syntheticThinking.length}</strong> topics show cross-domain thinking (connecting 3+ topics together), suggesting pattern recognition and synthetic reasoning.` : 'Limited cross-domain connections found — your thinking may be more siloed by topic.'}
+          ${resolvedTopics.length ? ` You've completed reasoning arcs on <strong style="color:var(--type-task)">${resolvedTopics.length}</strong> topic${resolvedTopics.length !== 1 ? 's' : ''} — moving from questions to decisions.` : ''}
+          ${unresolvedTopics.length ? ` <strong style="color:var(--type-question)">${unresolvedTopics.length}</strong> topic${unresolvedTopics.length !== 1 ? 's remain' : ' remains'} in active inquiry.` : ''}
