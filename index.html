@@ -225,10 +225,27 @@
       text-transform: uppercase; color: var(--accent);
     }
     .answer-body {
-      font-size: 14px; line-height: 1.75; color: var(--text-primary);
-      white-space: pre-wrap; word-wrap: break-word;
+      font-size: 14.5px; line-height: 1.8; color: var(--text-primary);
+      word-wrap: break-word;
     }
-    .answer-body p { margin-bottom: 10px; }
+    .answer-body p { margin-bottom: 12px; }
+    .answer-body h2 { font-size: 17px; font-weight: 700; margin: 22px 0 8px; color: var(--text-primary); letter-spacing: -0.2px; }
+    .answer-body h3 { font-size: 15px; font-weight: 600; margin: 16px 0 6px; color: var(--text-secondary); }
+    .answer-body ul, .answer-body ol { margin: 8px 0 14px 22px; }
+    .answer-body li { margin-bottom: 6px; line-height: 1.7; }
+    .answer-body strong { font-weight: 600; }
+    .answer-body em { font-style: italic; }
+    .answer-body code { background: var(--bg-inset); padding: 2px 6px; border-radius: 4px; font-size: 12.5px; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .answer-body pre { background: var(--bg-inset); padding: 14px; border-radius: var(--radius-sm); overflow-x: auto; margin: 10px 0; font-size: 12px; line-height: 1.6; }
+    .answer-body pre code { background: none; padding: 0; }
+    .answer-body blockquote { border-left: 3px solid var(--accent); padding: 8px 14px; margin: 12px 0; color: var(--text-secondary); background: var(--accent-bg); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    .answer-body table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    .answer-body th { background: var(--bg-inset); padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+    .answer-body td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .answer-body tr:hover td { background: var(--accent-bg); }
+    .answer-body hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .answer-body a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-bg-strong); }
+    .answer-body a:hover { border-bottom-color: var(--accent); }
     .answer-timing {
       display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px;
       padding-top: 12px; border-top: 1px solid var(--border);
@@ -807,7 +824,7 @@ async function doSearch() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>
         Open Brain \u2014 ${diag.model || selectedModel}
       </div>
-      <div class="answer-body">${escapeHtml(data.answer || 'No answer returned.')}</div>
+      <div class="answer-body">${data.answer || 'No answer returned.'}</div>
       <div class="answer-timing">
         <span>Intent: <span class="timing-val">${timing.classify_ms || '?'}ms</span></span>
         <span>Embed: <span class="timing-val">${timing.embed_ms || '?'}ms</span></span>
@@ -905,6 +922,35 @@ function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+function renderMarkdown(md) {
+  // Lightweight markdown → HTML (no external deps)
+  let html = escapeHtml(md);
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  // Bold + italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Blockquotes
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  // Unordered lists (- or *)
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  // Numbered lists
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  // Paragraphs: split on double newlines
+  html = html.split(/\n{2,}/).map(block => {
+    block = block.trim();
+    if (!block) return '';
+    if (/^<(h[23]|ul|ol|blockquote|li)/.test(block)) return block;
+    return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+  }).join('\n');
+  return html;
 }
 
 function timeAgo(ts) {
