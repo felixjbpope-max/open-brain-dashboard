@@ -1,18 +1,952 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Open Brain</title>
-<style>body{margin:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#888}.loader{text-align:center}.spinner{width:40px;height:40px;border:3px solid #333;border-top-color:#8b5cf6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}@keyframes spin{to{transform:rotate(360deg)}}</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Open Brain</title>
+  <!-- Preconnect to all external origins for parallel DNS+TLS -->
+  <link rel="preconnect" href="https://ulyfanmimpduissivodl.supabase.co" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+  <!-- Preload critical scripts so they download in parallel with CSS -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" as="script" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script async src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.344.0/umd/lucide.min.js" onload="window.__lucideReady=true;if(window.__lucidePending)lucide.createIcons({attrs:{class:''}})"></script>
+  <style>
+    :root {
+      /* Warm Canvas palette */
+      --bg-page: #F4F3F0;
+      --bg-surface: #FFFFFF;
+      --bg-inset: #F0EDEA;
+      --bg-track: #E6E3DE;
+      --border: #DDD9D3;
+      --border-focus: #D4714A;
+      --text-primary: #111111;
+      --text-secondary: #444444;
+      --text-tertiary: #7A7A7A;
+      --text-muted: #A8A4A0;
+      --accent: #D4714A;
+      --accent-hover: #C4613A;
+      --accent-bg: rgba(212,113,74,0.08);
+      --accent-bg-strong: rgba(212,113,74,0.14);
+      --accent-glow: rgba(212,113,74,0.2);
+      --blue: #3A70A0;
+      --blue-bg: rgba(58,112,160,0.08);
+      --amber: #C48A30;
+      --amber-bg: rgba(196,138,48,0.08);
+      --green: #2D8A56;
+      --green-bg: rgba(45,138,86,0.08);
+      --red: #C45A4A;
+      --red-bg: rgba(196,90,74,0.08);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.03);
+      --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.05);
+      --shadow-focus: 0 0 0 3px rgba(212,113,74,0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-page);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+    }
+
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea { font-family: inherit; }
+
+    /* === Layout === */
+    .container { max-width: 620px; margin: 0 auto; padding: 0 20px; }
+
+    .header {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(244,243,240,0.85);
+      backdrop-filter: blur(20px) saturate(1.3);
+      -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), #e0915c);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(212,113,74,0.2);
+    }
+    .logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); }
+    .badge {
+      padding: 2px 7px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em;
+      color: var(--accent); background: var(--accent-bg);
+      border: 1px solid rgba(212,113,74,0.15); border-radius: 5px;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 2px; }
+    .icon-btn {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm); border: none; background: transparent;
+      color: var(--text-tertiary); transition: all 0.15s;
+    }
+    .icon-btn:hover { color: var(--text-primary); background: var(--bg-inset); }
+    .icon-btn.active { color: var(--accent); background: var(--accent-bg); }
+
+    main { padding: 24px 0 100px; }
+
+    /* === Auth Screen === */
+    .auth-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 20px; background: var(--bg-page);
+    }
+    .auth-box { width: 100%; max-width: 380px; }
+    .auth-header { text-align: center; margin-bottom: 36px; }
+    .auth-logo {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 64px; height: 64px; border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent), #e0915c);
+      margin-bottom: 20px;
+      box-shadow: 0 6px 24px rgba(212,113,74,0.25);
+    }
+    .auth-title { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); }
+    .auth-sub { font-size: 14px; color: var(--text-tertiary); margin-top: 4px; }
+
+    .auth-card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 28px 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .input {
+      width: 100%; padding: 11px 14px;
+      background: var(--bg-inset); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-primary); font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input::placeholder { color: var(--text-muted); }
+    .input:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); background: var(--bg-surface); }
+
+    .btn-primary {
+      width: 100%; padding: 11px;
+      background: var(--accent); color: #fff;
+      font-size: 14px; font-weight: 600; border: none;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 2px 8px rgba(212,113,74,0.25);
+      transition: all 0.15s;
+    }
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(212,113,74,0.3); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      width: 100%; padding: 11px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 14px; font-weight: 500;
+      border-radius: var(--radius-sm); transition: all 0.15s;
+    }
+    .btn-secondary:hover { background: var(--bg-inset); border-color: var(--text-muted); }
+
+    .divider { display: flex; align-items: center; gap: 14px; margin: 14px 0; }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .auth-error {
+      margin-top: 14px; padding: 11px 14px;
+      background: var(--red-bg); border: 1px solid rgba(196,90,74,0.2);
+      border-radius: var(--radius-sm); font-size: 13px; color: var(--red);
+    }
+    .auth-success {
+      margin-top: 14px; padding: 20px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); text-align: center;
+    }
+
+    /* === Search === */
+    .search-wrap {
+      display: flex; align-items: center;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      box-shadow: var(--shadow);
+    }
+    .search-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-focus), var(--shadow);
+    }
+    .search-wrap .icon { margin-left: 16px; color: var(--text-muted); display: flex; transition: color 0.15s; }
+    .search-wrap:focus-within .icon { color: var(--accent); }
+    .search-input {
+      flex: 1; padding: 14px 12px;
+      background: transparent; border: none;
+      color: var(--text-primary); font-size: 15px; outline: none;
+    }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-btn {
+      margin: 6px; padding: 8px 18px;
+      background: var(--accent); color: #fff;
+      font-size: 13px; font-weight: 600; border: none;
+      border-radius: var(--radius-sm); transition: all 0.15s; white-space: nowrap;
+    }
+    .search-btn:hover { background: var(--accent-hover); }
+    .search-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* === Intent panel === */
+    .intent-panel {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 16px; margin-top: 14px;
+      box-shadow: var(--shadow);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .intent-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .intent-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .intent-time { font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text-muted); }
+
+    .intent-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 7px;
+      font-size: 11px; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-surface); color: var(--text-tertiary);
+      transition: all 0.15s; cursor: pointer;
+    }
+    .chip:hover { color: var(--text-secondary); background: var(--bg-inset); }
+    .chip.active {
+      background: var(--accent-bg-strong); color: var(--accent);
+      border-color: rgba(212,113,74,0.25);
+    }
+
+    .strategy-box {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--bg-inset);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--text-secondary);
+    }
+    .strategy-box .highlight { color: var(--accent); font-weight: 600; }
+
+    .pipeline { display: flex; align-items: center; gap: 4px; margin-top: 10px; overflow-x: auto; padding-bottom: 2px; }
+    .pipeline::-webkit-scrollbar { height: 0; }
+    .pipe-step {
+      flex-shrink: 0; padding: 4px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 500;
+      background: var(--bg-inset); color: var(--text-muted); white-space: nowrap;
+      border: 1px solid var(--border);
+    }
+    .pipe-step.active { background: var(--green-bg); color: var(--green); border-color: rgba(45,138,86,0.2); }
+    .pipe-line { width: 10px; height: 1px; background: var(--border); flex-shrink: 0; }
+
+    /* === Results === */
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px; }
+    .results-count { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+    .results-count .blue { color: var(--blue); }
+    .results-count .amber { color: var(--amber); }
+    .legend { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--text-tertiary); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .dot-blue { background: var(--blue); }
+    .dot-amber { background: var(--amber); }
+
+    .result-card {
+      position: relative;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); overflow: hidden;
+      margin-bottom: 10px; transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      animation: slideUp 0.25s ease both;
+    }
+    .result-card:nth-child(2) { animation-delay: 0.03s; }
+    .result-card:nth-child(3) { animation-delay: 0.06s; }
+    .result-card:nth-child(4) { animation-delay: 0.09s; }
+    .result-card:hover { border-color: var(--text-muted); box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+
+    .result-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .result-stripe.session { background: var(--blue); }
+    .result-stripe.thought { background: var(--amber); }
+
+    .result-body { padding: 14px 14px 14px 18px; }
+    .result-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+    }
+    .tag-session { background: var(--blue-bg); color: var(--blue); }
+    .tag-thought { background: var(--amber-bg); color: var(--amber); }
+    .result-detail { font-size: 11px; color: var(--text-tertiary); }
+    .result-detail.mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 10px; }
+    .result-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    .result-score { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .score-rank { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+    .score-badge {
+      padding: 3px 7px; background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 6px; font-size: 11px;
+      font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text-tertiary);
+    }
+
+    .diag-toggle {
+      display: flex; align-items: center; gap: 5px; margin-top: 10px;
+      font-size: 11px; color: var(--text-muted); background: none; border: none; padding: 0;
+      transition: color 0.15s;
+    }
+    .diag-toggle:hover { color: var(--text-tertiary); }
+    .diag-panel {
+      margin-top: 10px; padding: 12px;
+      background: var(--bg-inset); border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .score-row { margin-bottom: 10px; }
+    .score-label { font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 500; }
+    .bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .bar-bg { flex: 1; height: 4px; background: var(--bg-track); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+    .bar-fill.coral { background: var(--accent); }
+    .bar-fill.green { background: var(--green); }
+    .bar-val { font-size: 10px; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text-muted); width: 36px; text-align: right; }
+    .diag-row { display: flex; gap: 24px; padding-top: 4px; }
+    .diag-item label { font-size: 10px; color: var(--text-muted); display: block; font-weight: 500; }
+    .diag-item span { font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text-tertiary); }
+
+    /* === Empty state === */
+    .empty { text-align: center; padding: 56px 0; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .empty-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px; border-radius: 16px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      margin-bottom: 18px; box-shadow: var(--shadow);
+    }
+    .empty p { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500; }
+    .empty .hint { font-size: 12px; color: var(--text-tertiary); font-weight: 400; }
+
+    .quick-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 280px; margin: 28px auto 0; }
+    .quick-card {
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      padding: 14px 10px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); color: var(--text-tertiary);
+      font-size: 12px; font-weight: 500; transition: all 0.15s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .quick-card:hover {
+      border-color: var(--accent); color: var(--accent);
+      box-shadow: var(--shadow-hover); transform: translateY(-2px);
+    }
+
+    /* === Stats === */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; animation: slideUp 0.25s ease; }
+    .stat-card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 14px 10px; text-align: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: all 0.15s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow); }
+    .stat-card .stat-icon { color: var(--text-muted); display: flex; justify-content: center; margin-bottom: 6px; }
+    .stat-card .stat-val { font-size: 20px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: var(--text-primary); }
+    .stat-card .stat-label { font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* === Capture modal === */
+    .modal-overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.15s ease; }
+    .modal-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.25); backdrop-filter: blur(4px); }
+    .modal-content {
+      position: relative; width: 100%; max-width: 440px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+      animation: slideUp 0.25s ease;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .modal-close { background: none; border: none; color: var(--text-muted); padding: 4px; transition: color 0.15s; }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-body { padding: 16px 20px; }
+    .modal-body textarea {
+      width: 100%; padding: 12px 14px;
+      background: var(--bg-inset); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-primary); font-size: 14px;
+      resize: none; min-height: 110px; line-height: 1.6;
+    }
+    .modal-body textarea::placeholder { color: var(--text-muted); }
+    .modal-body textarea:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
+    .cat-chips { display: flex; gap: 7px; margin-top: 12px; }
+    .cat-chip {
+      padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--bg-surface); color: var(--text-muted); transition: all 0.15s;
+    }
+    .cat-chip:hover { color: var(--text-tertiary); background: var(--bg-inset); }
+    .cat-chip.active { background: var(--accent-bg-strong); color: var(--accent); border-color: rgba(212,113,74,0.2); }
+    .modal-footer { padding: 0 20px 20px; }
+    .capture-status { font-size: 12px; text-align: center; padding: 10px; margin-bottom: 10px; border-radius: var(--radius-sm); font-weight: 500; }
+    .capture-status.success { background: var(--green-bg); color: var(--green); }
+    .capture-status.error { background: var(--red-bg); color: var(--red); }
+
+    /* === FAB === */
+    .fab {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 4px 16px rgba(212,113,74,0.3);
+      display: none; align-items: center; justify-content: center;
+      border: none; color: #fff; transition: all 0.15s; z-index: 30;
+    }
+    .fab:hover { background: var(--accent-hover); box-shadow: 0 6px 20px rgba(212,113,74,0.35); transform: scale(1.06); }
+    .fab:active { transform: scale(0.95); }
+    @media (max-width: 640px) { .fab { display: flex; } }
+
+    /* === Loading === */
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-bar { height: 2px; background: var(--bg-track); border-radius: 1px; overflow: hidden; margin-top: 10px; max-width: 200px; margin-left: auto; margin-right: auto; }
+    .loading-bar-fill {
+      height: 100%; width: 30%;
+      background: linear-gradient(90deg, var(--accent), #e0915c);
+      border-radius: 1px; animation: loading 1.2s ease-in-out infinite;
+    }
+    @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+
+    .hidden { display: none !important; }
+
+    @media (min-width: 641px) {
+      .modal-content { border-radius: var(--radius-xl); margin-bottom: 40px; }
+    }
+
+    /* === Scrollbar === */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    ::selection { background: rgba(212,113,74,0.2); }
+  </style>
 </head>
 <body>
-<div class="loader"><div class="spinner"></div><div>Loading Open Brain...</div></div>
+
+<!-- ============ AUTH SCREEN ============ -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></div>
+      <h1 class="auth-title">Open Brain</h1>
+      <p class="auth-sub">Your agentic knowledge system</p>
+    </div>
+    <div class="auth-card">
+      <div id="auth-form">
+        <input id="auth-email" class="input" type="email" placeholder="your@email.com" style="margin-bottom:10px" />
+        <button id="btn-magic" class="btn-primary" style="margin-bottom:0">Send magic link</button>
+        <div class="divider"><div class="divider-line"></div><span class="divider-text">or</span><div class="divider-line"></div></div>
+        <div id="pw-fields" class="hidden" style="margin-bottom:10px">
+          <input id="auth-pw" class="input" type="password" placeholder="Password" />
+        </div>
+        <button id="btn-pw-toggle" class="btn-secondary">Sign in with password</button>
+      </div>
+      <div id="auth-error" class="auth-error hidden"></div>
+      <div id="auth-sent" class="auth-success hidden">
+        <p style="font-size:15px;font-weight:600;color:var(--text-primary)">Check your email</p>
+        <p style="font-size:13px;color:var(--text-tertiary);margin-top:4px">We sent a magic link to <span id="sent-email" style="color:var(--accent);font-weight:500"></span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app" class="hidden">
+  <header class="header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg></div>
+          <span class="logo-text">Open Brain</span>
+          <span class="badge">PROTOTYPE</span>
+        </div>
+        <div class="header-actions">
+          <button id="btn-stats" class="icon-btn" title="Stats"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg></button>
+          <button id="btn-capture" class="icon-btn" title="Capture thought"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <button id="btn-logout" class="icon-btn" title="Sign out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="stats-panel" class="stats-grid hidden"></div>
+
+    <div class="search-wrap">
+      <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="search-input" class="search-input" type="text" placeholder="Ask your brain anything..." />
+      <button id="search-btn" class="search-btn" disabled>Search</button>
+    </div>
+
+    <div id="intent-panel" class="intent-panel hidden"></div>
+    <div id="results-area"></div>
+
+    <div id="empty-state" class="empty">
+      <div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg></div>
+      <p>Search across your sessions and thoughts</p>
+      <p class="hint">Try: "auth flow decision" &middot; "what connects IC to Open Brain" &middot; "RLS policy"</p>
+      <div id="quick-cards" class="quick-cards"></div>
+    </div>
+  </main>
+
+  <button class="fab" id="fab-capture"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+</div>
+
+<!-- ============ CAPTURE MODAL ============ -->
+<div id="capture-modal" class="modal-overlay hidden">
+  <div class="modal-bg"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Capture thought</h3>
+      <button class="modal-close" id="capture-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <textarea id="capture-text" placeholder="What's on your mind?"></textarea>
+      <div class="cat-chips" id="cat-chips"></div>
+    </div>
+    <div class="modal-footer">
+      <div id="capture-status" class="capture-status hidden"></div>
+      <button id="capture-save" class="btn-primary">Save to Open Brain</button>
+    </div>
+  </div>
+</div>
+
 <script>
-fetch("https://ulyfanmimpduissivodl.supabase.co/storage/v1/object/public/ui/open-brain.html")
-.then(function(r){return r.text()})
-.then(function(html){document.open();document.write(html);document.close()})
-.catch(function(e){document.body.innerHTML="<div style=\"color:#f87171;text-align:center;margin-top:40vh;font-family:system-ui\"><h2>Failed to load Open Brain</h2><p>"+e.message+"</p><p><a href=\"javascript:location.reload()\" style=\"color:#8b5cf6\">Retry</a></p></div>"});
+// ===== CONFIG =====
+const SUPABASE_URL = 'https://ulyfanmimpduissivodl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVseWZhbm1pbXBkdWlzc2l2b2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NzM2MTEsImV4cCI6MjA4ODE0OTYxMX0.cZsMHpzs43SsaycAkvUWaqAtE1C4BfjdEG-ekliOIcE';
+const REDIRECT_URL = 'https://felixjbpope-max.github.io/open-brain-dashboard/';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const INTENTS = [
+  { key: 'FACTUAL_LOOKUP', label: 'Factual', icon: 'search', desc: 'FTS-dominant \u2014 exact keyword matches' },
+  { key: 'DECISION_HISTORY', label: 'Decision', icon: 'git-branch', desc: 'Hybrid + recency decay' },
+  { key: 'PROJECT_STATUS', label: 'Status', icon: 'bar-chart-3', desc: 'FTS + strong recency' },
+  { key: 'MULTI_HOP', label: 'Graph', icon: 'brain', desc: 'FalkorDB traversal + retrieval' },
+  { key: 'TEMPORAL', label: 'Timeline', icon: 'clock', desc: 'Hybrid + time windowing' },
+];
+
+const CATEGORIES = ['observation', 'decision', 'principle', 'question'];
+
+let currentIntent = null;
+let selectedCat = 'observation';
+let statsVisible = false;
+
+// ===== AUTH =====
+const $authScreen = document.getElementById('auth-screen');
+const $app = document.getElementById('app');
+const $authEmail = document.getElementById('auth-email');
+const $authPw = document.getElementById('auth-pw');
+const $authError = document.getElementById('auth-error');
+const $authSent = document.getElementById('auth-sent');
+const $authForm = document.getElementById('auth-form');
+const $pwFields = document.getElementById('pw-fields');
+let pwMode = false;
+
+document.getElementById('btn-magic').addEventListener('click', async () => {
+  const email = $authEmail.value.trim();
+  if (!email) return showAuthError('Please enter your email');
+  try {
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: REDIRECT_URL }
+    });
+    if (error) throw error;
+    $authForm.classList.add('hidden');
+    $authSent.classList.remove('hidden');
+    document.getElementById('sent-email').textContent = email;
+  } catch (e) { showAuthError(e.message); }
+});
+
+document.getElementById('btn-pw-toggle').addEventListener('click', async () => {
+  if (!pwMode) {
+    pwMode = true;
+    $pwFields.classList.remove('hidden');
+    document.getElementById('btn-pw-toggle').textContent = 'Sign in';
+    return;
+  }
+  const email = $authEmail.value.trim();
+  const pw = $authPw.value;
+  if (!email || !pw) return showAuthError('Please enter email and password');
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) throw error;
+  } catch (e) { showAuthError(e.message); }
+});
+
+function showAuthError(msg) {
+  $authError.textContent = msg;
+  $authError.classList.remove('hidden');
+  setTimeout(() => $authError.classList.add('hidden'), 4000);
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    $authScreen.classList.add('hidden');
+    $app.classList.remove('hidden');
+    initApp();
+  } else {
+    $authScreen.classList.remove('hidden');
+    $app.classList.add('hidden');
+  }
+});
+
+document.getElementById('btn-logout').addEventListener('click', () => sb.auth.signOut());
+
+// ===== INIT =====
+async function initApp() {
+  buildQuickCards();
+  buildCatChips();
+  await loadStats();
+}
+
+// ===== STATS =====
+async function loadStats() {
+  try {
+    const [sessRes, msgRes, entRes, thRes, coRes] = await Promise.all([
+      sb.from('session_brain_sessions').select('session_id', { count: 'exact', head: true }),
+      sb.from('session_brain_messages').select('id', { count: 'exact', head: true }),
+      sb.from('sb_entity_registry').select('entity_id', { count: 'exact', head: true }),
+      sb.from('thoughts').select('id', { count: 'exact', head: true }),
+      sb.from('sb_entity_cooccurrence').select('entity_a', { count: 'exact', head: true }),
+    ]);
+    const stats = [
+      { label: 'Sessions', value: (sessRes.count || 0).toLocaleString(), icon: 'message-square' },
+      { label: 'Messages', value: (msgRes.count || 0).toLocaleString(), icon: 'database' },
+      { label: 'Entities', value: (entRes.count || 0).toLocaleString(), icon: 'git-branch' },
+      { label: 'Thoughts', value: (thRes.count || 0).toLocaleString(), icon: 'lightbulb' },
+      { label: 'Embedded', value: '100%', icon: 'zap' },
+      { label: 'Co-occurs', value: (coRes.count || 0).toLocaleString(), icon: 'brain' },
+    ];
+    const $stats = document.getElementById('stats-panel');
+    $stats.innerHTML = stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-icon"><i data-lucide="${s.icon}" style="width:14px;height:14px"></i></div>
+        <p class="stat-val">${s.value}</p>
+        <p class="stat-label">${s.label}</p>
+      </div>
+    `).join('');
+    if(window.__lucideReady){lucide.createIcons({attrs:{class:''}})}else{window.__lucidePending=true}
+  } catch(e) { console.error('Stats error:', e); }
+}
+
+document.getElementById('btn-stats').addEventListener('click', () => {
+  statsVisible = !statsVisible;
+  document.getElementById('stats-panel').classList.toggle('hidden', !statsVisible);
+  document.getElementById('btn-stats').classList.toggle('active', statsVisible);
+});
+
+// ===== SEARCH =====
+const $searchInput = document.getElementById('search-input');
+const $searchBtn = document.getElementById('search-btn');
+
+$searchInput.addEventListener('input', () => {
+  $searchBtn.disabled = !$searchInput.value.trim();
+});
+$searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && $searchInput.value.trim()) doSearch();
+});
+$searchBtn.addEventListener('click', doSearch);
+
+function detectIntent(q) {
+  q = q.toLowerCase();
+  if (/\b(decision|why|chose|picked|decided)\b/.test(q)) return 'DECISION_HISTORY';
+  if (/\b(status|progress|state of|update on)\b/.test(q)) return 'PROJECT_STATUS';
+  if (/\b(connect|relat|between|link|graph)\b/.test(q)) return 'MULTI_HOP';
+  if (/\b(when|timeline|last time|history|chronolog)\b/.test(q)) return 'TEMPORAL';
+  return 'FACTUAL_LOOKUP';
+}
+
+async function doSearch() {
+  const query = $searchInput.value.trim();
+  if (!query) return;
+
+  const t0 = performance.now();
+  currentIntent = detectIntent(query);
+
+  document.getElementById('empty-state').classList.add('hidden');
+  const $results = document.getElementById('results-area');
+  $results.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div><div class="loading-bar"><div class="loading-bar-fill"></div></div><p style="font-size:13px;color:var(--text-muted);margin-top:12px">Searching both pools...</p></div>';
+
+  try {
+    // Use content_tsv (pre-computed tsvector with GIN index) for fast FTS on 148K+ rows
+    const [sessionRes, thoughtRes] = await Promise.all([
+      sb.from('session_brain_messages')
+        .select('id, session_id, role, content')
+        .textSearch('content_tsv', query, { type: 'websearch' })
+        .order('id', { ascending: false })
+        .limit(25),
+      sb.from('thoughts')
+        .select('id, content, type, topics, created_at, source')
+        .textSearch('content', query, { type: 'websearch' })
+        .order('created_at', { ascending: false })
+        .limit(25),
+    ]);
+
+    const elapsed = (performance.now() - t0).toFixed(0);
+    const results = [];
+
+    if (sessionRes.data) {
+      sessionRes.data.forEach((r, i) => {
+        results.push({
+          source: 'session', content: r.content, session: r.session_id,
+          role: r.role, id: r.id, timestamp: null,
+          scores: { fts_rank: i + 1 },
+        });
+      });
+    }
+    if (sessionRes.error) console.warn('Session search error:', sessionRes.error);
+
+    if (thoughtRes && thoughtRes.data) {
+      thoughtRes.data.forEach((r, i) => {
+        results.push({
+          source: 'thought', content: r.content, category: r.type || 'thought',
+          id: r.id, timestamp: r.created_at,
+          scores: { fts_rank: i + 1 },
+        });
+      });
+    }
+    if (thoughtRes && thoughtRes.error) console.warn('Thought search error:', thoughtRes.error);
+
+    const sessions = results.filter(r => r.source === 'session');
+    const thoughts = results.filter(r => r.source === 'thought');
+    const merged = [];
+    const maxLen = Math.max(sessions.length, thoughts.length);
+    for (let i = 0; i < maxLen && merged.length < 15; i++) {
+      if (i < sessions.length) merged.push(sessions[i]);
+      if (i < thoughts.length) merged.push(thoughts[i]);
+    }
+
+    renderIntent(currentIntent, elapsed);
+    renderResults(merged, sessions.length, thoughts.length);
+  } catch (err) {
+    console.error('Search failed:', err);
+    $results.innerHTML = '<div style="text-align:center;padding:40px"><p style="font-size:14px;color:var(--red)">Search error: ' + escapeHtml(err.message) + '</p></div>';
+  }
+}
+
+function renderIntent(intentKey, elapsed) {
+  const $panel = document.getElementById('intent-panel');
+  const active = INTENTS.find(i => i.key === intentKey);
+  const pipeSteps = ['Query', 'Intent', 'FTS', 'Vector*', 'RRF*', 'Reranker*', 'Top N'];
+
+  $panel.innerHTML = `
+    <div class="intent-header">
+      <div class="intent-label"><i data-lucide="sparkles" style="width:13px;height:13px;color:var(--accent)"></i> Intent Detection</div>
+      <span class="intent-time">${elapsed}ms</span>
+    </div>
+    <div class="intent-chips">
+      ${INTENTS.map(i => `<button class="chip ${i.key === intentKey ? 'active' : ''}" data-intent="${i.key}"><i data-lucide="${i.icon}" style="width:11px;height:11px"></i> ${i.label}</button>`).join('')}
+    </div>
+    <div class="strategy-box">
+      <i data-lucide="arrow-right" style="width:12px;height:12px;color:var(--accent);flex-shrink:0"></i>
+      <span><span class="highlight">${active.label}</span> \u2014 ${active.desc}</span>
+    </div>
+    <div class="pipeline">
+      ${pipeSteps.map((s, i) => `${i > 0 ? '<div class="pipe-line"></div>' : ''}<span class="pipe-step ${!s.includes('*') ? 'active' : ''}">${s.replace('*','')}</span>`).join('')}
+    </div>
+    <p style="font-size:10px;color:var(--text-muted);margin-top:10px">* Vector, RRF, and Reranker require edge function (Phase 2). Currently using FTS only.</p>
+  `;
+  $panel.classList.remove('hidden');
+
+  $panel.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentIntent = btn.dataset.intent;
+      renderIntent(currentIntent, elapsed);
+      if(window.__lucideReady){lucide.createIcons({attrs:{class:''}})}else{window.__lucidePending=true}
+    });
+  });
+  if(window.__lucideReady){lucide.createIcons({attrs:{class:''}})}else{window.__lucidePending=true}
+}
+
+function renderResults(results, sessionCount, thoughtCount) {
+  const $area = document.getElementById('results-area');
+  if (!results.length) {
+    $area.innerHTML = '<div style="text-align:center;padding:40px"><p style="font-size:14px;color:var(--text-tertiary)">No results found. Try different search terms.</p></div>';
+    return;
+  }
+
+  let html = `
+    <div class="results-header">
+      <span class="results-count">${results.length} results from <span class="blue">${sessionCount} sessions</span> + <span class="amber">${thoughtCount} thoughts</span></span>
+      <div class="legend"><span><span class="dot dot-blue"></span>Session</span><span><span class="dot dot-amber"></span>Thought</span></div>
+    </div>
+  `;
+
+  results.forEach((r, idx) => {
+    const isSession = r.source === 'session';
+    const preview = r.content ? (r.content.length > 280 ? r.content.substring(0, 280) + '...' : r.content) : '';
+    const timeStr = r.timestamp ? timeAgo(r.timestamp) : '';
+
+    html += `
+      <div class="result-card">
+        <div class="result-stripe ${isSession ? 'session' : 'thought'}"></div>
+        <div class="result-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+            <div style="flex:1;min-width:0">
+              <div class="result-meta">
+                <span class="tag ${isSession ? 'tag-session' : 'tag-thought'}">${isSession ? 'Session' : 'Thought'}</span>
+                ${isSession ? `<span class="result-detail mono">${r.session || ''}</span>` : ''}
+                ${!isSession && r.category ? `<span class="result-detail">${r.category}</span>` : ''}
+                ${timeStr ? `<span class="result-detail">${timeStr}</span>` : ''}
+              </div>
+              <p class="result-content">${escapeHtml(preview)}</p>
+            </div>
+            <div class="result-score">
+              <span class="score-rank">#${idx + 1}</span>
+              <span class="score-badge">FTS #${r.scores.fts_rank}</span>
+            </div>
+          </div>
+          <button class="diag-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">
+            \u25B8 Search diagnostics
+          </button>
+          <div class="diag-panel hidden">
+            <div class="diag-row">
+              <div class="diag-item"><label>Search Type</label><span>FTS (websearch)</span></div>
+              <div class="diag-item"><label>FTS Rank</label><span>#${r.scores.fts_rank}</span></div>
+              <div class="diag-item"><label>Pool</label><span>${isSession ? 'session_brain' : 'thoughts'}</span></div>
+            </div>
+            <p style="font-size:10px;color:var(--text-muted);margin-top:10px">Vector distance + RRF + Reranker scores available after edge function deployment.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  $area.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function timeAgo(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const days = Math.floor((now - d) / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return days + 'd ago';
+  if (days < 365) return Math.floor(days / 30) + 'mo ago';
+  return Math.floor(days / 365) + 'y ago';
+}
+
+// ===== QUICK CARDS =====
+function buildQuickCards() {
+  const cards = [
+    { label: 'Recent decisions', q: 'architecture decision', intent: 'DECISION_HISTORY', icon: 'git-branch' },
+    { label: 'Project status', q: 'project status update', intent: 'PROJECT_STATUS', icon: 'bar-chart-3' },
+    { label: 'RLS patterns', q: 'RLS policy edge function', intent: 'FACTUAL_LOOKUP', icon: 'shield' },
+    { label: 'Recent work', q: 'last deployed shipped', intent: 'TEMPORAL', icon: 'clock' },
+  ];
+  document.getElementById('quick-cards').innerHTML = cards.map(c => `
+    <button class="quick-card" data-q="${c.q}" data-intent="${c.intent}">
+      <i data-lucide="${c.icon}" style="width:16px;height:16px;color:var(--accent)"></i>
+      <span>${c.label}</span>
+    </button>
+  `).join('');
+  document.querySelectorAll('.quick-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $searchInput.value = btn.dataset.q;
+      $searchBtn.disabled = false;
+      doSearch();
+    });
+  });
+  if(window.__lucideReady){lucide.createIcons({attrs:{class:''}})}else{window.__lucidePending=true}
+}
+
+// ===== CAPTURE =====
+function buildCatChips() {
+  document.getElementById('cat-chips').innerHTML = CATEGORIES.map(c =>
+    `<button class="cat-chip ${c === selectedCat ? 'active' : ''}" data-cat="${c}">${c}</button>`
+  ).join('');
+  document.querySelectorAll('.cat-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedCat = btn.dataset.cat;
+      document.querySelectorAll('.cat-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === selectedCat));
+    });
+  });
+}
+
+function openCapture() {
+  document.getElementById('capture-modal').classList.remove('hidden');
+  document.getElementById('capture-text').value = '';
+  document.getElementById('capture-status').classList.add('hidden');
+  setTimeout(() => document.getElementById('capture-text').focus(), 100);
+}
+function closeCapture() { document.getElementById('capture-modal').classList.add('hidden'); }
+
+document.getElementById('btn-capture').addEventListener('click', openCapture);
+document.getElementById('fab-capture').addEventListener('click', openCapture);
+document.getElementById('capture-close').addEventListener('click', closeCapture);
+document.getElementById('capture-modal').querySelector('.modal-bg').addEventListener('click', closeCapture);
+
+document.getElementById('capture-save').addEventListener('click', async () => {
+  const content = document.getElementById('capture-text').value.trim();
+  if (!content) return;
+  const $status = document.getElementById('capture-status');
+  const $btn = document.getElementById('capture-save');
+  $btn.disabled = true;
+  $btn.textContent = 'Saving...';
+
+  try {
+    const { error } = await sb.from('thoughts').insert({
+      content,
+      type: selectedCat,
+      source: 'open-brain-ui',
+      content_hash: await sha256(content),
+      created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    $status.textContent = 'Saved successfully!';
+    $status.className = 'capture-status success';
+    $status.classList.remove('hidden');
+    setTimeout(() => closeCapture(), 1200);
+  } catch (e) {
+    $status.textContent = 'Error: ' + e.message;
+    $status.className = 'capture-status error';
+    $status.classList.remove('hidden');
+  } finally {
+    $btn.disabled = false;
+    $btn.textContent = 'Save to Open Brain';
+  }
+});
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ===== BOOT =====
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    $authScreen.classList.add('hidden');
+    $app.classList.remove('hidden');
+    initApp();
+  }
+})();
 </script>
 </body>
 </html>
