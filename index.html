@@ -570,18 +570,19 @@ const TCP_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 4
 
 // ===== INITIAL VOICES =====
 // Three starting voices — directly editable in the UI.
+// Each is an exemplar anchor + 2-3 cognitive moves + one negative constraint.
 const INITIAL_VOICES = [
   {
-    label: 'Voice 1',
-    text: 'Explain things with vivid imagery and concrete scenes first. Avoid abstract labels unless necessary. I understand best when ideas come as full packages of meaning rather than technical categories.',
+    label: 'Alan Watts',
+    text: "Explain like Alan Watts: circle the idea instead of defining it. Let meaning arrive sideways \u2014 through metaphor, paradox, and resonance with nature or Eastern thought. Use what the thing rhymes with, not what it is. Never lead with a definition; let the shape emerge from what you rule out.",
   },
   {
-    label: 'Voice 2',
-    text: 'Default to evocative, image-rich explanations. Give me the felt shape of the idea, not just the formal structure.',
+    label: 'Christopher Hitchens',
+    text: "Explain like Christopher Hitchens: take a strong position in the first sentence and defend it. Anchor claims with literary and historical weight \u2014 quote writers, cite cases, reach for the richer precedent. Escalate rhetorically where it earns the point. Prose should feel written, not casual. Never hedge; commitment is the voice.",
   },
   {
-    label: 'Voice 3',
-    text: 'Speak in scenes, not labels.',
+    label: '3Blue1Brown',
+    text: "Explain like 3Blue1Brown: start with a concrete picture or example the reader can hold in their head, before any abstraction or formula. Walk through it slowly, asking \u201Cwhat would this look like?\u201D at each step. Build intuition first; formalism only after intuition is solid. No jargon that hasn\u2019t been built from the ground up.",
   },
 ];
 
@@ -752,7 +753,7 @@ function renderColumn(col) {
     <div class="voice-column" data-col="${col.index}">
       <div class="voice-header">
         <div class="voice-header-top">
-          <span class="voice-label">Voice ${col.index + 1}</span>
+          <span class="voice-label">${escapeHtml(col.voiceLabel || ('Voice ' + (col.index + 1)))}</span>
           <span class="voice-version">v${col.version}</span>
         </div>
         <textarea class="voice-textarea" data-col="${col.index}" rows="3" placeholder="Describe how this voice should explain things. E.g. 'Speak in scenes, not labels.'">${escapeAttr(col.voiceText)}</textarea>
