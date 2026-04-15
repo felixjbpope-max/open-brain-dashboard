@@ -15,47 +15,50 @@
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" as="script" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script async src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.344.0/umd/lucide.min.js" onload="window.__lucideReady=true;if(window.__lucidePending)lucide.createIcons({attrs:{class:''}})"></script>
-  <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:false,theme:'neutral',themeVariables:{primaryColor:'#E8C060',primaryBorderColor:'#C4956A',primaryTextColor:'#111',lineColor:'#7A7A7A',secondaryColor:'#F0EDEA',tertiaryColor:'#F4F3F0'}});window.__mermaid=mermaid;</script>
+  <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:false,theme:'dark',themeVariables:{darkMode:true,background:'#1A1614',primaryColor:'#E8C060',primaryBorderColor:'#C4956A',primaryTextColor:'#F4EEDD',lineColor:'#BDB4A2',secondaryColor:'#312B24',tertiaryColor:'#25201B',mainBkg:'#25201B',secondBkg:'#312B24',textColor:'#F4EEDD'}});window.__mermaid=mermaid;</script>
   <style>
     :root {
-      /* Warm canvas base */
-      --bg-page: #F4F3F0;
-      --bg-surface: #FFFFFF;
-      --bg-inset: #F0EDEA;
-      --bg-track: #E6E3DE;
-      --border: #DDD9D3;
-      --border-focus: #C4956A;
-      --text-primary: #111111;
-      --text-secondary: #444444;
-      --text-tertiary: #7A7A7A;
-      --text-muted: #A8A4A0;
-      /* Compression Point gold accents */
-      --accent: #C4956A;            /* bronze */
-      --accent-hover: #B68556;
-      --accent-bright: #E8C060;     /* gold */
+      /* TCP canvas — deep, warm-black base */
+      --bg-page: #0E0C0A;
+      --bg-surface: #1A1614;          /* voice columns, cards */
+      --bg-inset: #25201B;            /* headers within cards, input bg */
+      --bg-track: #312B24;            /* scrollbar track */
+      --border: #2E2822;
+      --border-strong: #423A2F;
+      --border-focus: #E8C060;
+      /* Text — warm cream ramp */
+      --text-primary: #F4EEDD;
+      --text-secondary: #BDB4A2;
+      --text-tertiary: #857D6E;
+      --text-muted: #5A5448;
+      /* TCP gold + bronze accents */
+      --accent: #E8C060;              /* gold — primary */
+      --accent-hover: #F0D080;        /* brighter gold */
+      --accent-bright: #FFF5E6;       /* cream highlight */
+      --accent-bronze: #C4956A;
       --accent-cream: #FFF5E6;
-      --accent-bg: rgba(196,149,106,0.08);
-      --accent-bg-strong: rgba(196,149,106,0.14);
-      --accent-glow: rgba(232,192,96,0.25);
-      /* Secondary colour ramps (kept) */
-      --blue: #3A70A0;
-      --blue-bg: rgba(58,112,160,0.08);
-      --amber: #C48A30;
-      --amber-bg: rgba(196,138,48,0.08);
-      --green: #2D8A56;
-      --green-bg: rgba(45,138,86,0.08);
-      --red: #C45A4A;
-      --red-bg: rgba(196,90,74,0.08);
-      /* TCP mark container */
-      --mark-bg: #0A0A0A;
+      --accent-bg: rgba(232,192,96,0.08);
+      --accent-bg-strong: rgba(232,192,96,0.18);
+      --accent-glow: rgba(232,192,96,0.35);
+      /* Semantic — tuned for dark bg */
+      --blue: #7FB3D5;
+      --blue-bg: rgba(127,179,213,0.10);
+      --amber: #E8B060;
+      --amber-bg: rgba(232,176,96,0.10);
+      --green: #70C090;
+      --green-bg: rgba(112,192,144,0.10);
+      --red: #E88070;
+      --red-bg: rgba(232,128,112,0.10);
+      /* Brand mark — now sits directly on dark canvas */
+      --mark-bg: transparent;
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
       --radius-xl: 20px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.03);
-      --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.05);
-      --shadow-focus: 0 0 0 3px rgba(232,192,96,0.22);
-      --shadow-gold: 0 0 20px rgba(232,192,96,0.15);
+      --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.2);
+      --shadow-hover: 0 2px 8px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3);
+      --shadow-focus: 0 0 0 3px rgba(232,192,96,0.25);
+      --shadow-gold: 0 0 30px rgba(232,192,96,0.22);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,11 +89,12 @@
     .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
     .brand-mark {
       width: 44px; height: 44px; border-radius: 50%;
-      background: var(--mark-bg); display: flex; align-items: center; justify-content: center;
-      box-shadow: var(--shadow-gold);
+      background: var(--mark-bg);
+      display: flex; align-items: center; justify-content: center;
+      filter: drop-shadow(0 0 12px rgba(232,192,96,0.35));
       flex-shrink: 0;
     }
-    .brand-mark svg { width: 38px; height: 38px; }
+    .brand-mark svg { width: 44px; height: 44px; }
     .brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
     .brand-product {
       font-family: 'Lato', sans-serif; font-weight: 300;
@@ -126,11 +130,11 @@
     .auth-box { max-width: 400px; width: 100%; }
     .auth-header { text-align: center; margin-bottom: 24px; }
     .auth-logo {
-      width: 64px; height: 64px; border-radius: 50%; background: var(--mark-bg);
-      margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;
-      box-shadow: var(--shadow-gold);
+      width: 72px; height: 72px; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      filter: drop-shadow(0 0 18px rgba(232,192,96,0.4));
     }
-    .auth-logo svg { width: 56px; height: 56px; }
+    .auth-logo svg { width: 72px; height: 72px; }
     .auth-title {
       font-family: 'Lato', sans-serif; font-weight: 300;
       font-size: 24px; letter-spacing: 3px; text-transform: uppercase;
@@ -351,7 +355,7 @@
     }
     .voice-answer.empty {
       display: flex; align-items: center; justify-content: center;
-      color: var(--text-muted); font-size: 13px; font-style: italic; text-align: center;
+      color: var(--text-tertiary); font-size: 13px; font-style: italic; text-align: center;
     }
     .voice-answer.loading {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -412,7 +416,7 @@
 
     /* Empty hint below lab */
     .empty-hint {
-      text-align: center; padding: 24px 16px; color: var(--text-muted);
+      text-align: center; padding: 24px 16px; color: var(--text-tertiary);
       font-size: 13px; letter-spacing: 0.3px;
     }
     .empty-hint .hint {
@@ -591,7 +595,7 @@ const PRESETS = [
   { key: 'scenic_short',  label: 'Scenic \u2014 short',       text: 'VOICE: Speak in scenes, not labels.' },
   { key: 'custom',        label: 'Custom',              text: '' },
 ];
-const DEFAULT_COLUMN_PRESETS = ['default', 'scenic_user', 'scenic_short'];
+const DEFAULT_COLUMN_PRESETS = ['scenic_long', 'scenic_medium', 'scenic_short'];
 
 let selectedModel = 'claude';
 const CATEGORIES = ['observation', 'decision', 'principle', 'question'];
