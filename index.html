@@ -280,6 +280,7 @@
       background: var(--bg-surface); border: 1px solid var(--border);
       border-radius: var(--radius-lg); overflow: hidden;
       transition: border-color 0.15s, box-shadow 0.15s;
+      min-height: 78vh;
     }
     .voice-column:focus-within {
       border-color: var(--accent-bright);
@@ -287,69 +288,50 @@
     }
 
     .voice-header {
-      padding: 12px 14px;
+      padding: 14px 16px 12px;
       background: var(--bg-inset);
       border-bottom: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 10px;
     }
     .voice-header-top {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
     }
     .voice-label {
-      font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
-      color: var(--text-tertiary);
+      font-family: 'Lato', sans-serif; font-weight: 300;
+      font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase;
+      color: var(--accent);
     }
     .voice-version {
       font-size: 10px; font-weight: 600; letter-spacing: 0.4px;
       padding: 2px 8px; border-radius: 10px;
       background: var(--accent-bg); color: var(--accent);
     }
-    .voice-preset-select {
-      width: 100%; padding: 8px 10px;
-      background: var(--bg-surface); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary);
-      cursor: pointer; transition: border-color 0.15s;
-    }
-    .voice-preset-select:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
-
-    .voice-editor {
-      padding: 10px 14px;
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border);
-    }
-    .voice-editor-toggle {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      background: transparent; border: none; padding: 0;
-      font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
-      color: var(--text-tertiary); cursor: pointer; width: 100%;
-    }
-    .voice-editor-toggle:hover { color: var(--accent); }
-    .voice-editor-toggle svg { transition: transform 0.2s; }
-    .voice-editor.collapsed .voice-editor-toggle svg { transform: rotate(-90deg); }
-    .voice-editor-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .voice-editor.collapsed .voice-editor-body { display: none; }
     .voice-textarea {
-      width: 100%; min-height: 80px;
-      padding: 10px 12px; background: var(--bg-inset);
+      width: 100%; min-height: 82px;
+      padding: 10px 12px; background: var(--bg-surface);
       border: 1px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 13px; line-height: 1.5; color: var(--text-primary);
+      font-size: 13.5px; line-height: 1.55; color: var(--text-primary);
+      font-family: inherit; font-style: italic;
       resize: vertical; outline: none;
     }
-    .voice-textarea:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); background: var(--bg-surface); }
-    .voice-actions {
-      display: flex; gap: 6px;
+    .voice-textarea:focus {
+      border-color: var(--accent); box-shadow: var(--shadow-focus);
+      background: var(--bg-inset); font-style: normal;
     }
+    .voice-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+    .voice-actions { display: flex; gap: 6px; }
     .voice-regen-btn {
-      flex: 1; padding: 7px 10px; font-size: 12px; font-weight: 600;
-      background: var(--accent-bg); color: var(--accent);
+      flex: 1; padding: 8px 10px; font-size: 12px; font-weight: 600;
+      background: transparent; color: var(--accent);
       border: 1px solid var(--accent); border-radius: var(--radius-sm);
       transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      letter-spacing: 0.3px;
     }
-    .voice-regen-btn:hover { background: var(--accent); color: #fff; }
-    .voice-regen-btn:disabled { opacity: 0.4; cursor: default; }
+    .voice-regen-btn:hover { background: var(--accent-bg-strong); }
+    .voice-regen-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-tertiary); }
 
     .voice-answer {
-      flex: 1; padding: 16px 18px; min-height: 180px;
+      flex: 1; padding: 18px 20px; min-height: 240px;
       overflow-wrap: break-word;
       font-size: 14px; line-height: 1.65; color: var(--text-primary);
     }
@@ -586,16 +568,22 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // TCP mark SVG — embedded so it renders on dark-chip backgrounds
 const TCP_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><radialGradient id="coreD" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="10%" stop-color="#FFF5E6" stop-opacity="1"/><stop offset="25%" stop-color="#F0D080" stop-opacity="0.7"/><stop offset="50%" stop-color="#E8C060" stop-opacity="0.3"/><stop offset="100%" stop-color="#0A0A0A" stop-opacity="0"/></radialGradient><radialGradient id="ambientD" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#E8C060" stop-opacity="0.2"/><stop offset="60%" stop-color="#D4A85A" stop-opacity="0.06"/><stop offset="100%" stop-color="#0A0A0A" stop-opacity="0"/></radialGradient><filter id="glowD"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="outerGlow"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g transform="translate(200, 200) scale(0.95)"><circle cx="0" cy="0" r="185" fill="url(#ambientD)"/><path d="M 0,0 C -30,-8 -70,-15 -120,-18" fill="none" stroke="#F0D080" stroke-width="4.2" opacity="1.00" stroke-linecap="round"/><path d="M -120,-18 C -145,-20 -165,-18 -180,-12" fill="none" stroke="#E8C060" stroke-width="2.2" opacity="1.00" stroke-linecap="round"/><path d="M 0,0 C -25,-20 -55,-45 -95,-65" fill="none" stroke="#F0D080" stroke-width="3.8" opacity="1.00" stroke-linecap="round"/><path d="M -95,-65 C -115,-75 -135,-82 -155,-85" fill="none" stroke="#E8C060" stroke-width="2.0" opacity="0.95" stroke-linecap="round"/><path d="M 0,0 C -8,-25 -12,-55 -10,-82" fill="none" stroke="#F0D080" stroke-width="3.3" opacity="1.00" stroke-linecap="round"/><path d="M -10,-82 C -8,-98 -2,-112 5,-125" fill="none" stroke="#E8C060" stroke-width="1.7" opacity="0.88" stroke-linecap="round"/><path d="M 0,0 C 12,-22 22,-48 28,-72" fill="none" stroke="#F0D080" stroke-width="2.7" opacity="1.00" stroke-linecap="round"/><path d="M 0,0 C 22,8 48,18 70,30" fill="none" stroke="#F0D080" stroke-width="3.0" opacity="1.00" stroke-linecap="round"/><path d="M 0,0 C 20,-10 42,-18 60,-22" fill="none" stroke="#F0D080" stroke-width="2.7" opacity="1.00" stroke-linecap="round"/><path d="M 0,0 C -15,20 -35,45 -55,65" fill="none" stroke="#F0D080" stroke-width="3.3" opacity="1.00" stroke-linecap="round"/><path d="M -55,65 C -68,78 -82,88 -95,95" fill="none" stroke="#E8C060" stroke-width="1.5" opacity="0.80" stroke-linecap="round"/><path d="M 0,0 C 8,22 12,48 12,72" fill="none" stroke="#F0D080" stroke-width="2.4" opacity="1.00" stroke-linecap="round"/><path d="M -70,-15 C -78,-30 -85,-48 -90,-62" fill="none" stroke="#E8C060" stroke-width="1.5" opacity="0.80" stroke-linecap="round"/><path d="M 42,-18 C 50,-28 55,-40 58,-52" fill="none" stroke="#E8C060" stroke-width="0.9" opacity="0.50" stroke-linecap="round"/><circle cx="0" cy="0" r="20" fill="url(#coreD)" filter="url(#outerGlow)"/><circle cx="0" cy="0" r="7" fill="#FFF5E6" filter="url(#glowD)"/><circle cx="0" cy="0" r="3.5" fill="#FFFFFF"/></g></svg>`;
 
-// ===== PRESETS =====
-const PRESETS = [
-  { key: 'default',       label: 'Default (neutral)',   text: '' },
-  { key: 'scenic_user',   label: 'Scenic \u2014 your style',  text: "VOICE: Felix's preferred communication style is vivid, intuitive, image-led explanation. Give concrete examples, strong metaphors, language that carries meaning in one go. Avoid overly programmatic phrasing unless precision really requires it." },
-  { key: 'scenic_long',   label: 'Scenic \u2014 long',        text: 'VOICE: Explain things with vivid imagery and concrete scenes first. Avoid abstract labels unless necessary. Felix understands best when ideas come as full packages of meaning rather than technical categories.' },
-  { key: 'scenic_medium', label: 'Scenic \u2014 medium',      text: 'VOICE: Default to evocative, image-rich explanations. Give Felix the felt shape of the idea, not just the formal structure.' },
-  { key: 'scenic_short',  label: 'Scenic \u2014 short',       text: 'VOICE: Speak in scenes, not labels.' },
-  { key: 'custom',        label: 'Custom',              text: '' },
+// ===== INITIAL VOICES =====
+// Three starting voices — directly editable in the UI.
+const INITIAL_VOICES = [
+  {
+    label: 'Voice 1',
+    text: 'Explain things with vivid imagery and concrete scenes first. Avoid abstract labels unless necessary. I understand best when ideas come as full packages of meaning rather than technical categories.',
+  },
+  {
+    label: 'Voice 2',
+    text: 'Default to evocative, image-rich explanations. Give me the felt shape of the idea, not just the formal structure.',
+  },
+  {
+    label: 'Voice 3',
+    text: 'Speak in scenes, not labels.',
+  },
 ];
-const DEFAULT_COLUMN_PRESETS = ['scenic_long', 'scenic_medium', 'scenic_short'];
 
 let selectedModel = 'claude';
 const CATEGORIES = ['observation', 'decision', 'principle', 'question'];
@@ -603,17 +591,16 @@ let selectedCat = 'observation';
 let statsVisible = false;
 
 // Column state
-const columns = [0, 1, 2].map(i => ({
+const columns = INITIAL_VOICES.map((v, i) => ({
   index: i,
-  presetKey: DEFAULT_COLUMN_PRESETS[i],
-  voiceText: PRESETS.find(p => p.key === DEFAULT_COLUMN_PRESETS[i]).text,
-  voiceLabel: PRESETS.find(p => p.key === DEFAULT_COLUMN_PRESETS[i]).label,
+  label: v.label,
+  voiceText: v.text,
+  voiceLabel: v.label,
   version: 1,
   lastQuery: null,
   lastAnswer: null,
   lastExperimentId: null,
   score: null,   // 'up' | 'down' | null
-  editorCollapsed: true,
 }));
 let currentSessionGroup = null;
 
@@ -752,13 +739,11 @@ function renderLab() {
 }
 
 function renderColumn(col) {
-  const presetOptions = PRESETS.map(p => `<option value="${p.key}" ${p.key === col.presetKey ? 'selected' : ''}>${p.label}</option>`).join('');
-  const editorClass = col.editorCollapsed ? 'voice-editor collapsed' : 'voice-editor';
   const answerInner = col.lastAnswer
     ? col.lastAnswer
     : (col.loading
         ? `<div class="spinner"></div><div style="font-size:12px;letter-spacing:0.3px">Thinking&hellip;</div>`
-        : '<span>Ready. Ask a question above.</span>');
+        : '<span>Ask a question above &mdash; this voice will answer.</span>');
   const answerClass = col.lastAnswer ? 'voice-answer' : (col.loading ? 'voice-answer loading' : 'voice-answer empty');
   const timing = col.timing ? `${col.timing.total_ms || '?'}ms${col.cacheHit === 'answer' ? ' <span class="cached">&bull; cached</span>' : col.cacheHit === 'embedding' ? ' <span class="cached">&bull; embed cached</span>' : ''}` : '&mdash;';
   const scoreUpActive = col.score === 'up' ? 'active up' : '';
@@ -770,21 +755,12 @@ function renderColumn(col) {
           <span class="voice-label">Voice ${col.index + 1}</span>
           <span class="voice-version">v${col.version}</span>
         </div>
-        <select class="voice-preset-select" data-col="${col.index}">${presetOptions}</select>
-      </div>
-      <div class="${editorClass}" data-col="${col.index}">
-        <button class="voice-editor-toggle" data-col="${col.index}">
-          <span>Voice prompt</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="voice-editor-body">
-          <textarea class="voice-textarea" data-col="${col.index}" placeholder="Leave blank for neutral voice. Or write your own instruction &mdash; e.g. 'Speak in scenes, not labels.'">${escapeAttr(col.voiceText)}</textarea>
-          <div class="voice-actions">
-            <button class="voice-regen-btn" data-col="${col.index}" ${col.lastQuery ? '' : 'disabled'}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Regenerate
-            </button>
-          </div>
+        <textarea class="voice-textarea" data-col="${col.index}" rows="3" placeholder="Describe how this voice should explain things. E.g. 'Speak in scenes, not labels.'">${escapeAttr(col.voiceText)}</textarea>
+        <div class="voice-actions">
+          <button class="voice-regen-btn" data-col="${col.index}" ${col.lastQuery ? '' : 'disabled'}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Regenerate this voice
+          </button>
         </div>
       </div>
       <div class="${answerClass}" data-col="${col.index}">${answerInner}</div>
@@ -803,45 +779,11 @@ function escapeAttr(s) { return String(s || '').replace(/&/g, '&amp;').replace(/
 function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function wireColumnEvents() {
-  // Preset dropdown
-  document.querySelectorAll('.voice-preset-select').forEach(sel => {
-    sel.addEventListener('change', (e) => {
-      const i = Number(e.target.dataset.col);
-      const key = e.target.value;
-      const preset = PRESETS.find(p => p.key === key);
-      columns[i].presetKey = key;
-      if (key !== 'custom') {
-        columns[i].voiceText = preset.text;
-        columns[i].voiceLabel = preset.label;
-      } else {
-        columns[i].voiceLabel = 'Custom';
-      }
-      renderLab();
-    });
-  });
-  // Editor toggle
-  document.querySelectorAll('.voice-editor-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = Number(btn.dataset.col);
-      columns[i].editorCollapsed = !columns[i].editorCollapsed;
-      renderLab();
-    });
-  });
-  // Voice textarea — keep state in sync as they type
+  // Voice textarea — state stays in sync as user types; don't re-render on every keystroke
   document.querySelectorAll('.voice-textarea').forEach(ta => {
     ta.addEventListener('input', (e) => {
       const i = Number(e.target.dataset.col);
       columns[i].voiceText = e.target.value;
-      // If user starts editing, flag as custom
-      if (columns[i].presetKey !== 'custom') {
-        const preset = PRESETS.find(p => p.key === columns[i].presetKey);
-        if (preset && e.target.value.trim() !== (preset.text || '').trim()) {
-          columns[i].presetKey = 'custom';
-          columns[i].voiceLabel = 'Custom';
-          const sel = document.querySelector(`.voice-preset-select[data-col="${i}"]`);
-          if (sel) sel.value = 'custom';
-        }
-      }
     });
   });
   // Regenerate button (single column)
