@@ -524,6 +524,59 @@
     .fab:hover { transform: scale(1.05); }
     @media (max-width: 640px) { .fab { display: inline-flex; } }
 
+    /* === Chat history thread === */
+    .chat-thread {
+      margin-top: 24px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .chat-round {
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      background: var(--bg-surface); overflow: hidden;
+    }
+    .chat-round-question {
+      padding: 14px 18px; background: var(--bg-inset);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .chat-q-icon {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent-bg); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; margin-top: 1px;
+    }
+    .chat-q-text {
+      font-size: 14px; color: var(--text-primary); line-height: 1.5;
+      white-space: pre-wrap; flex: 1;
+    }
+    .chat-round-answers {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    }
+    .chat-round-answers > .chat-voice-answer {
+      padding: 14px 16px; border-right: 1px solid var(--border);
+      font-size: 13px; line-height: 1.55; color: var(--text-secondary);
+      min-height: 60px;
+    }
+    .chat-round-answers > .chat-voice-answer:last-child { border-right: none; }
+    .chat-voice-header {
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .chat-voice-answer h2 { font-size: 15px; font-weight: 700; margin: 14px 0 6px; color: var(--text-primary); }
+    .chat-voice-answer h3 { font-size: 13px; font-weight: 600; margin: 10px 0 4px; color: var(--text-secondary); }
+    .chat-voice-answer p { margin-bottom: 8px; }
+    .chat-voice-answer ul, .chat-voice-answer ol { margin: 4px 0 10px 18px; }
+    .chat-voice-answer li { margin-bottom: 3px; }
+    .chat-voice-answer strong { font-weight: 600; }
+    .chat-voice-answer code { background: var(--bg-inset); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+    .chat-voice-answer blockquote { border-left: 3px solid var(--accent); padding: 3px 10px; margin: 8px 0; color: var(--text-secondary); background: var(--accent-bg); }
+    .chat-voice-answer a { color: var(--accent); text-decoration: underline; }
+    .chat-voice-answer .mermaid { background: var(--bg-inset); padding: 10px; border-radius: var(--radius-sm); margin: 8px 0; text-align: center; }
+    @media (max-width: 800px) {
+      .chat-round-answers { grid-template-columns: 1fr; }
+      .chat-round-answers > .chat-voice-answer { border-right: none; border-bottom: 1px solid var(--border); }
+      .chat-round-answers > .chat-voice-answer:last-child { border-bottom: none; }
+    }
+
     .hidden { display: none !important; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -597,12 +650,15 @@
     </div>
 
     <div class="search-wrap">
-      <textarea id="search-input" class="search-input" rows="4" placeholder="Ask your brain anything &mdash; three voices will answer at once&hellip;"></textarea>
+      <textarea id="search-input" class="search-input" rows="4" placeholder="Ask your brain anything &mdash; three voices will answer. Keep asking to build a conversation&hellip;"></textarea>
       <div class="search-footer">
-        <span class="search-hint">Enter to send &middot; Shift+Enter for newline &middot; Runs all three voices in parallel</span>
+        <span class="search-hint">Enter to send &middot; Shift+Enter for newline &middot; Previous answers stay in the thread below</span>
         <button id="search-btn" class="search-btn" disabled>Ask all 3</button>
       </div>
     </div>
+
+    <!-- Chat history thread — previous rounds appear here -->
+    <div id="chat-thread" class="chat-thread"></div>
 
     <div class="lab-section-header">
       <span class="lab-section-title">Voice Lab</span>
@@ -681,7 +737,23 @@ const VOICE_LIBRARY = [
   ],
 ];
 
-// Defaults: first entry of each library
+// Flatten all voices into a single list (deduped by label, Custom last)
+const ALL_VOICES = (() => {
+  const seen = new Set();
+  const list = [];
+  for (const lib of VOICE_LIBRARY) {
+    for (const v of lib) {
+      if (v.label === 'Custom') continue;
+      if (seen.has(v.label)) continue;
+      seen.add(v.label);
+      list.push(v);
+    }
+  }
+  list.push({ label: 'Custom', text: '' });
+  return list;
+})();
+
+// Defaults: first entry of each original library column
 const INITIAL_VOICES = VOICE_LIBRARY.map(lib => ({ label: lib[0].label, text: lib[0].text }));
 
 let selectedModel = 'claude';
@@ -855,7 +927,7 @@ function renderColumn(col) {
           <span class="voice-version">v${col.version}</span>
         </div>
         <select class="voice-pick" data-col="${col.index}" aria-label="Pick a voice for column ${col.index + 1}">
-          ${VOICE_LIBRARY[col.index].map(v => `<option value="${escapeAttr(v.label)}" ${v.label === col.voiceLabel ? 'selected' : ''}>${escapeHtml(v.label)}</option>`).join('')}
+          ${ALL_VOICES.map(v => `<option value="${escapeAttr(v.label)}" ${v.label === col.voiceLabel ? 'selected' : ''}>${escapeHtml(v.label)}</option>`).join('')}
         </select>
         <textarea class="voice-textarea" data-col="${col.index}" placeholder="Describe how this voice should explain things. E.g. 'Speak in scenes, not labels.'">${escapeAttr(col.voiceText)}</textarea>
         <div class="voice-actions">
@@ -896,8 +968,7 @@ function wireColumnEvents() {
       columns[i].voiceText = e.target.value;
       autoResizeTextarea(e.target);
       // If user has edited away from any library preset, flip label to Custom
-      const lib = VOICE_LIBRARY[i];
-      const match = lib.find(v => v.text.trim() === e.target.value.trim());
+      const match = ALL_VOICES.find(v => v.text.trim() === e.target.value.trim());
       if (match) {
         columns[i].voiceLabel = match.label;
       } else {
@@ -911,7 +982,7 @@ function wireColumnEvents() {
   document.querySelectorAll('.voice-pick').forEach(sel => {
     sel.addEventListener('change', (e) => {
       const i = Number(e.target.dataset.col);
-      const chosen = VOICE_LIBRARY[i].find(v => v.label === e.target.value);
+      const chosen = ALL_VOICES.find(v => v.label === e.target.value);
       if (!chosen) return;
       columns[i].voiceLabel = chosen.label;
       columns[i].voiceText = chosen.text;
@@ -974,10 +1045,42 @@ async function saveScore(col) {
   } catch (e) { console.error('score save exception:', e); }
 }
 
+// ===== CHAT THREAD — archive previous round =====
+function archiveCurrentRound() {
+  // Only archive if there's a previous question with at least one answer
+  const hasAnswers = columns.some(c => c.lastAnswer && c.lastQuery);
+  if (!hasAnswers) return;
+
+  const $thread = document.getElementById('chat-thread');
+  const roundEl = document.createElement('div');
+  roundEl.className = 'chat-round';
+
+  const answersHTML = columns.map(c => {
+    const content = c.lastAnswer || '<em style="color:var(--text-muted)">No answer</em>';
+    return `<div class="chat-voice-answer">
+      <div class="chat-voice-header">${escapeHtml(c.voiceLabel || ('Voice ' + (c.index + 1)))}</div>
+      ${content}
+    </div>`;
+  }).join('');
+
+  roundEl.innerHTML = `
+    <div class="chat-round-question">
+      <div class="chat-q-icon">Q</div>
+      <div class="chat-q-text">${escapeHtml(columns[0].lastQuery)}</div>
+    </div>
+    <div class="chat-round-answers">${answersHTML}</div>
+  `;
+
+  $thread.appendChild(roundEl);
+}
+
 // ===== ASK ALL 3 =====
 async function doAskAll() {
   const query = $searchInput.value.trim();
   if (!query) return;
+
+  // Archive previous round into chat thread before overwriting
+  archiveCurrentRound();
 
   currentSessionGroup = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
   document.getElementById('empty-hint').classList.add('hidden');
@@ -996,9 +1099,16 @@ async function doAskAll() {
   });
   renderLab();
 
+  // Clear the input for the next question
+  $searchInput.value = '';
+  $searchBtn.disabled = true;
+
   // Fire all 3 in parallel
   await Promise.all(columns.map(c => runColumn(c.index, query)));
-  $searchBtn.disabled = false;
+  $searchBtn.disabled = !$searchInput.value.trim();
+
+  // Scroll the voice lab (latest answers) into view
+  document.getElementById('lab-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function runColumn(i, query) {
