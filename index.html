@@ -650,7 +650,7 @@
     </div>
 
     <div class="search-wrap">
-      <textarea id="search-input" class="search-input" rows="4" placeholder="Ask your brain anything &mdash; three voices will answer. Keep asking to build a conversation&hellip;"></textarea>
+      <textarea id="search-input" class="search-input" rows="4" placeholder="Ask your brain anything &mdash; three voices will answer. Follow up and each voice remembers the conversation&hellip;"></textarea>
       <div class="search-footer">
         <span class="search-hint">Enter to send &middot; Shift+Enter for newline &middot; Previous answers stay in the thread below</span>
         <button id="search-btn" class="search-btn" disabled>Ask all 3</button>
@@ -772,6 +772,7 @@ const columns = INITIAL_VOICES.map((v, i) => ({
   lastAnswer: null,
   lastExperimentId: null,
   score: null,   // 'up' | 'down' | null
+  history: [],   // Array of { query, answerText } for conversation context
 }));
 let currentSessionGroup = null;
 
@@ -1046,10 +1047,23 @@ async function saveScore(col) {
 }
 
 // ===== CHAT THREAD — archive previous round =====
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
 function archiveCurrentRound() {
   // Only archive if there's a previous question with at least one answer
   const hasAnswers = columns.some(c => c.lastAnswer && c.lastQuery);
   if (!hasAnswers) return;
+
+  // Save to each column's conversation history (plain text for LLM context)
+  columns.forEach(c => {
+    if (c.lastQuery && c.lastAnswer) {
+      c.history.push({ query: c.lastQuery, answerText: stripHtml(c.lastAnswer) });
+    }
+  });
 
   const $thread = document.getElementById('chat-thread');
   const roundEl = document.createElement('div');
@@ -1121,8 +1135,17 @@ async function runColumn(i, query) {
     const { data: { session } } = await sb.auth.getSession();
     const jwt = session?.access_token;
 
+    // Build conversation context from history so the voice can continue the thread
+    let contextQuery = query;
+    if (col.history.length > 0) {
+      const historyBlock = col.history.map(h =>
+        `User: ${h.query}\n${col.voiceLabel}: ${h.answerText}`
+      ).join('\n\n');
+      contextQuery = `[Previous conversation]\n${historyBlock}\n\n[New question]\n${query}`;
+    }
+
     const body = {
-      query,
+      query: contextQuery,
       model: selectedModel,
       voice_prompt: col.voiceText,
       voice_label: col.voiceLabel,
