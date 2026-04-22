@@ -333,7 +333,7 @@
       background: var(--bg-surface); border: 1px solid var(--border);
       border-radius: var(--radius-lg); overflow: hidden;
       transition: border-color 0.15s, box-shadow 0.15s;
-      min-height: 78vh;
+      max-height: 85vh;
     }
     .voice-column:focus-within {
       border-color: var(--accent-bright);
@@ -397,19 +397,69 @@
     .voice-regen-btn:hover { background: var(--accent-bg-strong); }
     .voice-regen-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-tertiary); }
 
+    /* Scrollable chat area within each column */
+    .voice-chat-scroll {
+      flex: 1; overflow-y: auto; min-height: 200px;
+      display: flex; flex-direction: column;
+    }
+    .voice-chat-scroll::-webkit-scrollbar { width: 4px; }
+    .voice-chat-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Individual messages in the column chat */
+    .voice-msg { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .voice-msg:last-child { border-bottom: none; }
+    .voice-msg-q {
+      background: var(--bg-inset); font-size: 13px; color: var(--text-secondary);
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .voice-msg-q-badge {
+      flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+      background: var(--accent-bg); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; margin-top: 1px;
+    }
+    .voice-msg-q-text { flex: 1; white-space: pre-wrap; line-height: 1.5; }
+    .voice-msg-a { font-size: 14px; line-height: 1.65; color: var(--text-primary); }
+
     .voice-answer {
-      flex: 1; padding: 18px 20px; min-height: 240px;
+      flex: 1; padding: 18px 20px; min-height: 120px;
       overflow-wrap: break-word;
       font-size: 14px; line-height: 1.65; color: var(--text-primary);
     }
     .voice-answer.empty {
       display: flex; align-items: center; justify-content: center;
       color: var(--text-tertiary); font-size: 13px; font-style: italic; text-align: center;
+      min-height: 80px;
     }
     .voice-answer.loading {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 10px; color: var(--text-tertiary);
+      gap: 10px; color: var(--text-tertiary); min-height: 80px;
     }
+
+    /* Per-column reply input */
+    .voice-reply-wrap {
+      border-top: 1px solid var(--border); background: var(--bg-inset);
+      padding: 10px 12px; display: flex; gap: 8px; align-items: flex-end;
+    }
+    .voice-reply-input {
+      flex: 1; padding: 8px 10px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 13px; line-height: 1.4;
+      color: var(--text-primary); font-family: inherit;
+      resize: none; outline: none; min-height: 34px; max-height: 100px;
+      overflow-y: auto;
+    }
+    .voice-reply-input:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+    .voice-reply-input::placeholder { color: var(--text-muted); }
+    .voice-reply-send {
+      flex-shrink: 0; width: 34px; height: 34px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); display: flex;
+      align-items: center; justify-content: center;
+      transition: all 0.15s; cursor: pointer;
+    }
+    .voice-reply-send:hover { background: var(--accent-hover); }
+    .voice-reply-send:disabled { opacity: 0.3; cursor: default; }
     .voice-answer h2 { font-size: 16px; font-weight: 700; margin: 16px 0 6px; color: var(--text-primary); letter-spacing: -0.2px; }
     .voice-answer h3 { font-size: 14px; font-weight: 600; margin: 12px 0 4px; color: var(--text-secondary); }
     .voice-answer p { margin-bottom: 10px; }
@@ -524,59 +574,6 @@
     .fab:hover { transform: scale(1.05); }
     @media (max-width: 640px) { .fab { display: inline-flex; } }
 
-    /* === Chat history thread === */
-    .chat-thread {
-      margin-top: 24px;
-      display: flex; flex-direction: column; gap: 24px;
-    }
-    .chat-round {
-      border: 1px solid var(--border); border-radius: var(--radius-lg);
-      background: var(--bg-surface); overflow: hidden;
-    }
-    .chat-round-question {
-      padding: 14px 18px; background: var(--bg-inset);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: flex-start; gap: 10px;
-    }
-    .chat-q-icon {
-      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-      background: var(--accent-bg); color: var(--accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; margin-top: 1px;
-    }
-    .chat-q-text {
-      font-size: 14px; color: var(--text-primary); line-height: 1.5;
-      white-space: pre-wrap; flex: 1;
-    }
-    .chat-round-answers {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
-    }
-    .chat-round-answers > .chat-voice-answer {
-      padding: 14px 16px; border-right: 1px solid var(--border);
-      font-size: 13px; line-height: 1.55; color: var(--text-secondary);
-      min-height: 60px;
-    }
-    .chat-round-answers > .chat-voice-answer:last-child { border-right: none; }
-    .chat-voice-header {
-      font-size: 11px; font-weight: 600; color: var(--accent);
-      letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 8px;
-    }
-    .chat-voice-answer h2 { font-size: 15px; font-weight: 700; margin: 14px 0 6px; color: var(--text-primary); }
-    .chat-voice-answer h3 { font-size: 13px; font-weight: 600; margin: 10px 0 4px; color: var(--text-secondary); }
-    .chat-voice-answer p { margin-bottom: 8px; }
-    .chat-voice-answer ul, .chat-voice-answer ol { margin: 4px 0 10px 18px; }
-    .chat-voice-answer li { margin-bottom: 3px; }
-    .chat-voice-answer strong { font-weight: 600; }
-    .chat-voice-answer code { background: var(--bg-inset); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
-    .chat-voice-answer blockquote { border-left: 3px solid var(--accent); padding: 3px 10px; margin: 8px 0; color: var(--text-secondary); background: var(--accent-bg); }
-    .chat-voice-answer a { color: var(--accent); text-decoration: underline; }
-    .chat-voice-answer .mermaid { background: var(--bg-inset); padding: 10px; border-radius: var(--radius-sm); margin: 8px 0; text-align: center; }
-    @media (max-width: 800px) {
-      .chat-round-answers { grid-template-columns: 1fr; }
-      .chat-round-answers > .chat-voice-answer { border-right: none; border-bottom: 1px solid var(--border); }
-      .chat-round-answers > .chat-voice-answer:last-child { border-bottom: none; }
-    }
-
     .hidden { display: none !important; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -656,9 +653,6 @@
         <button id="search-btn" class="search-btn" disabled>Ask all 3</button>
       </div>
     </div>
-
-    <!-- Chat history thread — previous rounds appear here -->
-    <div id="chat-thread" class="chat-thread"></div>
 
     <div class="lab-section-header">
       <span class="lab-section-title">Voice Lab</span>
@@ -911,15 +905,40 @@ function renderLab() {
 }
 
 function renderColumn(col) {
-  const answerInner = col.lastAnswer
-    ? col.lastAnswer
-    : (col.loading
-        ? `<div class="spinner"></div><div style="font-size:12px;letter-spacing:0.3px">Thinking&hellip;</div>`
-        : '<span>Ask a question above &mdash; this voice will answer.</span>');
-  const answerClass = col.lastAnswer ? 'voice-answer' : (col.loading ? 'voice-answer loading' : 'voice-answer empty');
+  // Build chat history messages
+  const historyHTML = col.history.map(h => `
+    <div class="voice-msg voice-msg-q">
+      <div class="voice-msg-q-badge">Q</div>
+      <div class="voice-msg-q-text">${escapeHtml(h.query)}</div>
+    </div>
+    <div class="voice-msg voice-msg-a">${h.answerHtml || escapeHtml(h.answerText)}</div>
+  `).join('');
+
+  // Current answer (latest round)
+  let currentMsgHTML = '';
+  if (col.lastQuery) {
+    const answerInner = col.lastAnswer
+      ? col.lastAnswer
+      : (col.loading
+          ? `<div class="spinner"></div><div style="font-size:12px;letter-spacing:0.3px">Thinking&hellip;</div>`
+          : '');
+    const answerClass = col.lastAnswer ? 'voice-msg voice-msg-a' : (col.loading ? 'voice-msg voice-msg-a voice-answer loading' : 'voice-msg voice-msg-a');
+    currentMsgHTML = `
+      <div class="voice-msg voice-msg-q">
+        <div class="voice-msg-q-badge">Q</div>
+        <div class="voice-msg-q-text">${escapeHtml(col.lastQuery)}</div>
+      </div>
+      <div class="${answerClass}" data-col="${col.index}">${answerInner}</div>
+    `;
+  }
+
+  // Empty state
+  const emptyHTML = (!col.lastQuery && col.history.length === 0)
+    ? '<div class="voice-answer empty"><span>Ask a question above &mdash; this voice will answer.</span></div>'
+    : '';
+
   const timing = col.timing ? `${col.timing.total_ms || '?'}ms${col.cacheHit === 'answer' ? ' <span class="cached">&bull; cached</span>' : col.cacheHit === 'embedding' ? ' <span class="cached">&bull; embed cached</span>' : ''}` : '&mdash;';
-  const scoreUpActive = col.score === 'up' ? 'active up' : '';
-  const scoreDownActive = col.score === 'down' ? 'active down' : '';
+
   return `
     <div class="voice-column" data-col="${col.index}">
       <div class="voice-header">
@@ -931,20 +950,22 @@ function renderColumn(col) {
           ${ALL_VOICES.map(v => `<option value="${escapeAttr(v.label)}" ${v.label === col.voiceLabel ? 'selected' : ''}>${escapeHtml(v.label)}</option>`).join('')}
         </select>
         <textarea class="voice-textarea" data-col="${col.index}" placeholder="Describe how this voice should explain things. E.g. 'Speak in scenes, not labels.'">${escapeAttr(col.voiceText)}</textarea>
-        <div class="voice-actions">
-          <button class="voice-regen-btn" data-col="${col.index}" ${col.lastQuery ? '' : 'disabled'}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Regenerate this voice
-          </button>
-        </div>
       </div>
-      <div class="${answerClass}" data-col="${col.index}">${answerInner}</div>
+      <div class="voice-chat-scroll" data-col="${col.index}">
+        ${historyHTML}
+        ${currentMsgHTML}
+        ${emptyHTML}
+      </div>
+      <div class="voice-reply-wrap">
+        <textarea class="voice-reply-input" data-col="${col.index}" rows="1" placeholder="Reply to ${escapeAttr(col.voiceLabel || 'this voice')}…"></textarea>
+        <button class="voice-reply-send" data-col="${col.index}" title="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
       <div class="voice-footer">
         <span class="voice-timing">${timing}</span>
         <div class="voice-score">
-          <button class="copy-btn" data-col="${col.index}" title="Copy answer" ${col.lastAnswer ? '' : 'disabled'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-          <button class="score-btn ${scoreUpActive}" data-col="${col.index}" data-vote="up" title="This voice worked well" ${col.lastExperimentId ? '' : 'disabled'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>
-          <button class="score-btn ${scoreDownActive}" data-col="${col.index}" data-vote="down" title="This voice didn't land" ${col.lastExperimentId ? '' : 'disabled'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zM17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg></button>
+          <button class="copy-btn" data-col="${col.index}" title="Copy last answer" ${col.lastAnswer ? '' : 'disabled'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         </div>
       </div>
     </div>
@@ -1012,11 +1033,48 @@ function wireColumnEvents() {
       saveScore(columns[i]);
     });
   });
+  // Per-column reply — send button
+  document.querySelectorAll('.voice-reply-send').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.col);
+      const input = document.querySelector(`.voice-reply-input[data-col="${i}"]`);
+      if (!input) return;
+      const query = input.value.trim();
+      if (!query) return;
+      input.value = '';
+      doReplyToColumn(i, query);
+    });
+  });
+  // Per-column reply — enter to send
+  document.querySelectorAll('.voice-reply-input').forEach(ta => {
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const i = Number(ta.dataset.col);
+        const query = ta.value.trim();
+        if (!query) return;
+        ta.value = '';
+        doReplyToColumn(i, query);
+      }
+    });
+    // Auto-resize reply input
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 100) + 'px';
+    });
+  });
+  // Scroll each chat area to bottom
+  document.querySelectorAll('.voice-chat-scroll').forEach(el => {
+    el.scrollTop = el.scrollHeight;
+  });
   // Copy buttons
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const i = Number(btn.dataset.col);
-      const el = document.querySelector(`.voice-answer[data-col="${i}"]`);
+      const scroll = document.querySelector(`.voice-chat-scroll[data-col="${i}"]`);
+      if (!scroll) return;
+      const msgs = scroll.querySelectorAll('.voice-msg-a');
+      const el = msgs[msgs.length - 1];
       if (!el) return;
       const text = (el.innerText || el.textContent || '').trim();
       if (!text) return;
@@ -1058,34 +1116,42 @@ function archiveCurrentRound() {
   const hasAnswers = columns.some(c => c.lastAnswer && c.lastQuery);
   if (!hasAnswers) return;
 
-  // Save to each column's conversation history (plain text for LLM context)
+  // Save to each column's conversation history (plain text for LLM, HTML for display)
   columns.forEach(c => {
     if (c.lastQuery && c.lastAnswer) {
-      c.history.push({ query: c.lastQuery, answerText: stripHtml(c.lastAnswer) });
+      c.history.push({
+        query: c.lastQuery,
+        answerText: stripHtml(c.lastAnswer),
+        answerHtml: c.lastAnswer,
+      });
     }
   });
+}
 
-  const $thread = document.getElementById('chat-thread');
-  const roundEl = document.createElement('div');
-  roundEl.className = 'chat-round';
+// ===== REPLY TO SINGLE COLUMN =====
+async function doReplyToColumn(i, query) {
+  const col = columns[i];
 
-  const answersHTML = columns.map(c => {
-    const content = c.lastAnswer || '<em style="color:var(--text-muted)">No answer</em>';
-    return `<div class="chat-voice-answer">
-      <div class="chat-voice-header">${escapeHtml(c.voiceLabel || ('Voice ' + (c.index + 1)))}</div>
-      ${content}
-    </div>`;
-  }).join('');
+  // Archive current answer to history before overwriting
+  if (col.lastQuery && col.lastAnswer) {
+    col.history.push({
+      query: col.lastQuery,
+      answerText: stripHtml(col.lastAnswer),
+      answerHtml: col.lastAnswer,
+    });
+  }
 
-  roundEl.innerHTML = `
-    <div class="chat-round-question">
-      <div class="chat-q-icon">Q</div>
-      <div class="chat-q-text">${escapeHtml(columns[0].lastQuery)}</div>
-    </div>
-    <div class="chat-round-answers">${answersHTML}</div>
-  `;
+  col.version += 1;
+  col.lastQuery = query;
+  col.lastAnswer = null;
+  col.lastExperimentId = null;
+  col.score = null;
+  col.timing = null;
+  col.cacheHit = null;
+  col.loading = true;
 
-  $thread.appendChild(roundEl);
+  renderLab();
+  await runColumn(i, query);
 }
 
 // ===== ASK ALL 3 =====
