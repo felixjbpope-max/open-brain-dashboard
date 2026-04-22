@@ -630,6 +630,7 @@
           </div>
         </div>
         <div class="header-actions">
+          <button id="btn-new-convo" class="icon-btn" title="New conversation"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
           <button id="btn-stats" class="icon-btn" title="Stats"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg></button>
           <button id="btn-capture" class="icon-btn" title="Capture thought"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
           <button id="btn-logout" class="icon-btn" title="Sign out"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
@@ -831,12 +832,111 @@ sb.auth.onAuthStateChange((event, session) => {
 });
 
 document.getElementById('btn-logout').addEventListener('click', () => sb.auth.signOut());
+document.getElementById('btn-new-convo').addEventListener('click', () => startNewConversation());
+
+// ===== CONVERSATION PERSISTENCE =====
+// Each browser session gets a conversationSessionId. On refresh, we load the latest session.
+let conversationSessionId = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
+
+async function saveMessage(colIndex, role, content) {
+  const col = columns[colIndex];
+  try {
+    await sb.from('dashboard_conversations').insert({
+      session_id: conversationSessionId,
+      column_index: colIndex,
+      voice_label: col.voiceLabel,
+      voice_prompt: col.voiceText,
+      role: role,
+      content: content,
+      model: selectedModel,
+    });
+  } catch (e) { console.error('saveMessage error:', e); }
+}
+
+async function loadLatestConversation() {
+  try {
+    // Find the most recent session_id for this user
+    const { data: latest, error: latestErr } = await sb
+      .from('dashboard_conversations')
+      .select('session_id')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (latestErr || !latest || latest.length === 0) return;
+
+    const sessionId = latest[0].session_id;
+    conversationSessionId = sessionId;
+
+    // Load all messages for that session
+    const { data: msgs, error: msgsErr } = await sb
+      .from('dashboard_conversations')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (msgsErr || !msgs || msgs.length === 0) return;
+
+    // Group messages by column_index and rebuild history
+    for (const col of columns) {
+      const colMsgs = msgs.filter(m => m.column_index === col.index);
+      if (colMsgs.length === 0) continue;
+
+      // Restore voice label and prompt from the latest message
+      const lastMsg = colMsgs[colMsgs.length - 1];
+      col.voiceLabel = lastMsg.voice_label;
+      col.voiceText = lastMsg.voice_prompt;
+
+      // Pair up user/assistant messages into history
+      col.history = [];
+      for (let j = 0; j < colMsgs.length; j++) {
+        const m = colMsgs[j];
+        if (m.role === 'user') {
+          // Find the next assistant message for this column
+          const ans = colMsgs[j + 1];
+          if (ans && ans.role === 'assistant') {
+            col.history.push({
+              query: m.content,
+              answerText: stripHtml(ans.content),
+              answerHtml: ans.content,
+            });
+            j++; // skip the assistant message
+          }
+        }
+      }
+
+      // Check if the last message pair should be lastQuery/lastAnswer (latest round)
+      if (col.history.length > 0) {
+        const lastRound = col.history.pop();
+        col.lastQuery = lastRound.query;
+        col.lastAnswer = lastRound.answerHtml;
+      }
+    }
+
+    renderLab();
+    console.log(`Restored conversation ${sessionId} (${msgs.length} messages)`);
+  } catch (e) { console.error('loadLatestConversation error:', e); }
+}
+
+async function startNewConversation() {
+  conversationSessionId = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
+  columns.forEach(c => {
+    c.history = [];
+    c.lastQuery = null;
+    c.lastAnswer = null;
+    c.lastExperimentId = null;
+    c.score = null;
+    c.timing = null;
+    c.cacheHit = null;
+    c.loading = false;
+  });
+  renderLab();
+}
 
 // ===== INIT =====
 async function initApp() {
   renderLab();
   buildCatChips();
-  await loadStats();
+  await Promise.all([loadStats(), loadLatestConversation()]);
 }
 
 // ===== STATS =====
@@ -1150,6 +1250,9 @@ async function doReplyToColumn(i, query) {
   col.cacheHit = null;
   col.loading = true;
 
+  // Persist the user's question
+  saveMessage(i, 'user', query);
+
   renderLab();
   await runColumn(i, query);
 }
@@ -1166,8 +1269,8 @@ async function doAskAll() {
   document.getElementById('empty-hint').classList.add('hidden');
   $searchBtn.disabled = true;
 
-  // Reset all three columns
-  columns.forEach(c => {
+  // Reset all three columns and persist user questions
+  columns.forEach((c, i) => {
     c.version = 1;
     c.lastQuery = query;
     c.lastAnswer = null;
@@ -1176,6 +1279,7 @@ async function doAskAll() {
     c.timing = null;
     c.cacheHit = null;
     c.loading = true;
+    saveMessage(i, 'user', query);
   });
   renderLab();
 
@@ -1241,6 +1345,10 @@ async function runColumn(i, query) {
     col.timing = (data.diagnostics && data.diagnostics.timing) || null;
     col.cacheHit = (data.diagnostics && data.diagnostics.cache && data.diagnostics.cache.hit) || 'none';
     col.loading = false;
+
+    // Persist the assistant's answer
+    if (col.lastAnswer) saveMessage(i, 'assistant', col.lastAnswer);
+
     renderLab();
 
     // Render any Mermaid diagrams in this column
